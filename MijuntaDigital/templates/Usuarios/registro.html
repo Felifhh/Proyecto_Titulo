@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+
+{% block title %}Registro de Vecino{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="p-4 rounded shadow-sm"
+          style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+
+        <h2 class="text-center mb-4" style="color: var(--color-primary); font-weight: 700;">
+            Registro de Vecino
+        </h2>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-3">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+
+            <!-- RUN -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">RUN</label>
+              {{ form.run|add_class:"form-control"|attr:"placeholder:12345678-9" }}
+            </div>
+
+            <!-- Nombre -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nombre completo</label>
+              {{ form.nombre|add_class:"form-control"|attr:"placeholder:Tu nombre completo" }}
+            </div>
+
+            <!-- Dirección -->
+            <div class="col-md-12">
+              <label class="form-label fw-semibold">Dirección</label>
+              {{ form.direccion|add_class:"form-control"|attr:"placeholder:Calle y número" }}
+            </div>
+
+            <!-- Correo -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Correo electrónico</label>
+              {{ form.correo|add_class:"form-control"|attr:"placeholder:ejemplo@correo.com" }}
+            </div>
+
+            <!-- Teléfono -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Teléfono</label>
+              {{ form.telefono|add_class:"form-control"|attr:"placeholder:+56 9 1234 5678" }}
+            </div>
+
+            <!-- Contraseña -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contraseña</label>
+              {{ form.contrasena }}
+              {% if form.contrasena.help_text %}
+                <small class="text-muted">{{ form.contrasena.help_text }}</small>
+              {% endif %}
+            </div>
+
+            <!-- Repetir Contraseña -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Repetir contraseña</label>
+              {{ form.repetir_contrasena }}
+            </div>
+
+            <!-- Evidencia -->
+            <div class="col-md-12 mt-3">
+              <label class="form-label fw-semibold">
+                Evidencia de residencia (Documento o imagen)
+              </label>
+              {{ form.evidencia|add_class:"form-control" }}
+              <small class="text-muted">Puedes subir una boleta de servicios, certificado o foto del comprobante.</small>
+            </div>
+
+          </div>
+
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+              Enviar Registro
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

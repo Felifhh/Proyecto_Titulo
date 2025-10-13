@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Validación de Vecinos{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4" style="color: var(--color-primary);"> Solicitudes Pendientes</h2>
+
+  {% if items %}
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle text-center">
+        <thead style="color: var(--color-primary);">
+          <tr>
+            <th>RUN</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Fecha</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in items %}
+          <tr>
+            <td>{{ v.run }}</td>
+            <td>{{ v.nombre }}</td>
+            <td>{{ v.correo }}</td>
+            <td>{{ v.telefono }}</td>
+            <td>{{ v.fecha_registro|date:"d/m/Y H:i" }}</td>
+            <td>
+              <a href="{% url 'usuarios_detalle' v.id_vecino %}" 
+                  class="btn btn-outline-primary btn-sm">
+                Ver Detalle
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info text-center mt-4">
+      No hay solicitudes pendientes por validar.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+

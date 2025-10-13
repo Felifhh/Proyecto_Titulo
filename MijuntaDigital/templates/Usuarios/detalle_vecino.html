@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Solicitud{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-lg p-4" style="background-color: var(--color-bg-secondary);">
+    <h3 class="text-center mb-4" style="color: var(--color-primary);">
+      🧍 Detalle de Registro de Vecino
+    </h3>
+
+    <div class="row g-4">
+      <div class="col-md-8">
+        <table class="table table-sm text-light">
+          <tr><th>RUN:</th><td>{{ vecino.run }}</td></tr>
+          <tr><th>Nombre:</th><td>{{ vecino.nombre }}</td></tr>
+          <tr><th>Dirección:</th><td>{{ vecino.direccion }}</td></tr>
+          <tr><th>Correo:</th><td>{{ vecino.correo }}</td></tr>
+          <tr><th>Teléfono:</th><td>{{ vecino.telefono }}</td></tr>
+          <tr><th>Fecha de registro:</th><td>{{ vecino.fecha_registro|date:"d/m/Y H:i" }}</td></tr>
+          <tr><th>Estado actual:</th><td>{{ vecino.estado }}</td></tr>
+        </table>
+
+        {% if vecino.evidencia %}
+        <div class="mt-3">
+          <strong>Evidencia adjunta:</strong><br>
+          <a href="{{ vecino.evidencia.url }}" target="_blank" class="btn btn-outline-info btn-sm mt-2">
+            📎 Ver Documento
+          </a>
+        </div>
+        {% else %}
+          <p class="text-muted mt-3">Sin evidencia cargada.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <hr class="border-secondary mt-4">
+
+    <div class="text-center">
+      <form method="post" action="{% url 'usuarios_aprobar' vecino.id_vecino %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success px-4"> Aprobar</button>
+      </form>
+      <form method="post" action="{% url 'usuarios_rechazar' vecino.id_vecino %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger px-4"> Rechazar</button>
+      </form>
+      <a href="{% url 'usuarios_pendientes' %}" class="btn btn-outline-light ms-2">Volver</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

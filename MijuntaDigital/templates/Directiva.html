@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5 text-center">
+  <h2 class="text-success"> Opciones de Directiva </h2>
+
+  <a href="/usuarios/validacion/pendientes" class="btn btn-primary mt-3">Solicitudes de Registro</a>
+    <a href="{% url 'gestion_usuarios' %}" class="btn btn-primary mt-3">Gestión de Usuarios</a>
+</div>
+{% endblock %}

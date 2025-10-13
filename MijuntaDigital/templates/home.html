@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inicio - Mi Junta Digital{% endblock %}
+
+
+{% block content %}
+
+<!-- Banner superior -->
+  <br>
+<section class="hero-section text-white text-center py-5" style="background: linear-gradient(135deg, #3b82f6, #7c3aed); border-radius: 10px;">
+  <div class="container" style="background: linear-gradient(135deg, #3b82f6, #7c3aed); border: 0cap;">
+    <h1 class="display-5 fw-bold mb-3">Bienvenido a Mi Junta Digital</h1>
+    <p>Tu espacio comunitario para gestionar trámites, participar en proyectos y estar al día con tu junta vecinal.</p>
+
+    {% if request.session.vecino_nombre %}
+      <h4 class="text-warning"> ¡Hola {{ request.session.vecino_nombre }}!</h4>
+    {% else %}
+      <a href="#" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">Inicia sesión</a>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Trámites y comunidad -->
+<section class="py-5" style="border: 0cap;">
+  <div class="container">
+    <br>
+    <h2 class="text-center mb-4 text-primary">Trámites y Servicios</h2>
+    <div class="row g-4 justify-content-center">
+
+      <div class="col-md-3 col-6 text-center">
+        <a href="{% url 'certificado_solicitar' %}" class="card shadow-sm h-100 text-decoration-none text-dark">
+          <div class="card-body">
+            <i class="fas fa-file-signature fa-3x mb-3 text-primary"></i>
+            <h5>Certificado de Residencia</h5>
+            <p class="small text-muted">Solicita tu certificado digital con QR.</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-3 col-6 text-center">
+        <a href="{% url 'proyectos_todos' %}" class="card shadow-sm h-100 text-decoration-none text-dark">
+          <div class="card-body">
+            <i class="fas fa-lightbulb fa-3x mb-3 text-primary"></i>
+            <h5>Proyectos Vecinales</h5>
+            <p class="small text-muted">Postula iniciativas que beneficien a tu comunidad.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+    <br>
+  </div>
+</section>
+
+<!-- Noticias -->
+<section class="py-5" style="border: 0cap;">
+  <div class="container">
+    <br>
+    <h2 class="text-center mb-4 text-primary">Noticias y Comunicados</h2>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <img src="{% static 'img/noticia1.jpg' %}" class="card-img-top" alt="Noticia 1">
+          <div class="card-body">
+            <h5 class="card-title">Nueva luminaria en la plaza</h5>
+            <p class="card-text">El municipio instaló nuevas luces LED en la plaza central para mayor seguridad.</p>
+            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <img src="{% static 'img/noticia2.jpg' %}" class="card-img-top" alt="Noticia 2">
+          <div class="card-body">
+            <h5 class="card-title">Campaña de reciclaje</h5>
+            <p class="card-text">Participa en la jornada de reciclaje este sábado a las 10:00 hrs en la sede vecinal.</p>
+            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <img src="{% static 'img/noticia3.jpg' %}" class="card-img-top" alt="Noticia 3">
+          <div class="card-body">
+            <h5 class="card-title">Nueva cancha techada</h5>
+            <p class="card-text">Gracias a la gestión vecinal, se aprobó la construcción de una cancha multiuso techada.</p>
+            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Actividades -->
+<section class="py-5 text-center text-white" style="background: linear-gradient(135deg, #16a34a, #0d9488);">
+  <div class="container" style="background: linear-gradient(135deg, #16a34a, #0d9488); border: 0;">
+    <h2 class="mb-4 fw-bold">Actividades Municipales</h2>
+    <p class="mb-5">¡Únete a talleres, jornadas deportivas y actividades culturales en tu comunidad!</p>
+
+    <div class="row justify-content-center g-4">
+      <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-lg">
+          <img src="{% static 'img/actividad1.jpg' %}" class="card-img-top" alt="Taller de Yoga">
+          <div class="card-body">
+            <h6 class="fw-bold">Taller de Yoga</h6>
+            <p class="small text-muted mb-0">Martes y jueves, 18:00 hrs</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-lg">
+          <img src="{% static 'img/actividad2.jpg' %}" class="card-img-top" alt="Huerto comunitario">
+          <div class="card-body">
+            <h6 class="fw-bold">Huerto Comunitario</h6>
+            <p class="small text-muted mb-0">Sábados, 10:00 hrs</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-lg">
+          <img src="{% static 'img/actividad3.jpg' %}" class="card-img-top" alt="Taller de reciclaje">
+          <div class="card-body">
+            <h6 class="fw-bold">Taller de Reciclaje</h6>
+            <p class="small text-muted mb-0">Domingos, 11:00 hrs</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<br>
+
+<!-- Calendario -->
+<section class="py-5 text-center">
+  <div class="container">
+    <h2 class="text-primary mb-3">Calendario de Uso de Espacios</h2>
+    <p class="text-muted mb-4">Consulta la disponibilidad de salas y áreas comunes.</p>
+    <img src="{% static 'img/calendario_mockup.png' %}" alt="Calendario de espacios" class="img-fluid rounded shadow">
+  </div>
+</section>
+<br>
+
+{% endblock %}
