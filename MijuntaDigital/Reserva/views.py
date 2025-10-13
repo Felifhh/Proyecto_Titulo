@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from Usuarios.decorators import require_role
-from .models import EspacioComunal
 from .forms import EspacioForm
+from datetime import datetime, timedelta, time
+from django.utils.timezone import make_aware
+from Usuarios.models import Vecino
+from .models import Reserva, EspacioComunal
+from .forms import ReservaForm
 
 @require_role(['presidente', 'secretario', 'tesorero'])
 def gestionar_espacios(request):
@@ -103,4 +107,140 @@ def editar_espacio(request, id_espacio):
         'form': form,
         'modo': 'editar',
         'espacio': espacio
+    })
+
+
+def mis_reservas(request):
+    """
+    Muestra todas las reservas realizadas por el vecino autenticado.
+    """
+    if not request.session.get("vecino_id"):
+        messages.error(request, "Debes iniciar sesión para ver tus reservas.")
+        return redirect("home")
+
+    vecino = get_object_or_404(Vecino, pk=request.session["vecino_id"])
+    reservas = Reserva.objects.filter(id_vecino=vecino).order_by('-fecha_creacion')
+
+    return render(request, "Reserva/mis_reservas.html", {
+        "reservas": reservas,
+        "vecino": vecino
+    })
+
+
+
+
+def ver_espacios_comunales(request):
+    """
+    Muestra los espacios comunales activos disponibles para reserva.
+    """
+    espacios = EspacioComunal.objects.filter(estado="Activo").order_by("nombre")
+    return render(request, "Reserva/ver_espacios.html", {"espacios": espacios})
+
+
+def reservar_desde_catalogo(request, id_espacio):
+    """
+    Permite reservar un espacio comunal por horas exactas (08:00–20:00).
+    """
+    if not request.session.get("vecino_id"):
+        messages.error(request, "Debes iniciar sesión para reservar un espacio.")
+        return redirect("home")
+
+    vecino = get_object_or_404(Vecino, pk=request.session["vecino_id"])
+    espacio = get_object_or_404(EspacioComunal, pk=id_espacio, estado="Activo")
+
+    if request.method == "POST":
+        form = ReservaForm(request.POST)
+        if form.is_valid():
+            reserva = form.save(commit=False)
+            reserva.id_vecino = vecino
+            reserva.id_espacio = espacio
+            reserva.estado = "Activa" 
+
+            # Ya son objetos datetime.time, no hace falta convertir
+            hora_inicio = reserva.hora_inicio
+            hora_fin = reserva.hora_fin
+
+            # Validar rango permitido
+            if hora_inicio.hour < 8 or hora_fin.hour > 20:
+                messages.error(request, "Las reservas deben estar entre las 08:00 y las 20:00.")
+                return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
+
+            # Validar conflictos
+            conflicto = Reserva.objects.filter(
+                id_espacio=espacio,
+                fecha=reserva.fecha,
+                hora_inicio__lt=hora_fin,
+                hora_fin__gt=hora_inicio,
+                estado__in=["Activa"]
+            ).exists()
+
+            if conflicto:
+                messages.error(request, "El espacio ya está reservado en ese horario.")
+                return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
+
+            # Calcular monto (por horas exactas)
+            horas = hora_fin.hour - hora_inicio.hour
+            reserva.total = espacio.monto_hora * horas
+            reserva.save()
+
+            messages.success(request, f"Reserva enviada correctamente. Monto total: ${reserva.total:,}.")
+            return redirect("mis_reservas")
+
+        else:
+            messages.error(request, "Hay errores en el formulario.")
+    else:
+        form = ReservaForm(initial={"id_espacio": espacio})
+        if "id_espacio" in form.fields:
+            form.fields["id_espacio"].disabled = True
+
+    return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
+
+
+
+
+def ver_disponibilidad(request, id_espacio):
+    """
+    Muestra los bloques horarios de un espacio comunal en una fecha.
+    """
+    espacio = get_object_or_404(EspacioComunal, pk=id_espacio)
+    fecha_str = request.GET.get("fecha")
+    
+    # Si no se selecciona fecha, usar hoy
+    fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else datetime.today().date()
+
+    # Bloques horarios base (por ejemplo de 8:00 a 20:00)
+    hora_inicio_dia = time(8, 0)
+    hora_fin_dia = time(20, 0)
+    intervalo = 60  # minutos por bloque
+    bloques = []
+
+    # Obtener reservas del día
+    reservas = Reserva.objects.filter(
+        id_espacio=espacio,
+        fecha=fecha,
+        estado__in=["Activa"]
+    )
+
+    hora_actual = datetime.combine(fecha, hora_inicio_dia)
+    fin_dia = datetime.combine(fecha, hora_fin_dia)
+
+    while hora_actual < fin_dia:
+        siguiente = hora_actual + timedelta(minutes=intervalo)
+        ocupado = reservas.filter(
+            hora_inicio__lt=siguiente.time(),
+            hora_fin__gt=hora_actual.time()
+        ).exists()
+
+        bloques.append({
+            "inicio": hora_actual.strftime("%H:%M"),
+            "fin": siguiente.strftime("%H:%M"),
+            "estado": "Ocupado" if ocupado else "Libre"
+        })
+
+        hora_actual = siguiente
+
+    return render(request, "Reserva/disponibilidad.html", {
+        "espacio": espacio,
+        "fecha": fecha,
+        "bloques": bloques
     })

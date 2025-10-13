@@ -29,7 +29,7 @@ def registro_vecino(request):
     """
     Permite que un vecino se registre en el sistema.
     El registro queda en estado "Pendiente" hasta ser aprobado por el Presidente.
-    Ahora permite adjuntar una foto de perfil y un archivo de evidencia.
+    Ahora permite adjuntar un archivo de evidencia.
     """
     if request.method == "POST":
         form = RegistroVecinoForm(request.POST, request.FILES)

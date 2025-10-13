@@ -85,6 +85,21 @@
           </a>
         </li>
         {% endif %}
+<!-- Visible para todos los usuarios autenticados -->
+        {% if request.session.vecino_id %}
+<li class="nav-item">
+  <a class="nav-link text-success" href="{% url 'ver_espacios_comunales' %}">
+    <i class="fa-solid fa-building me-1"></i> Reserva Espacios
+  </a>
+</li>
+
+
+        <li class="nav-item">
+          <a class="nav-link text-light" href="{% url 'mis_reservas' %}">
+            <i class="fa-solid fa-list-ul me-1 text-info"></i> Mis Reservas
+        </a>
+        </li>
+        {% endif %}
 
       </ul>
     </div>

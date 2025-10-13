@@ -1,8 +1,7 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
 from .models import Vecino, Rol
-from .validators import normalizar_run, validar_dv, formatear_run, validar_contrasena
-
+from .validators import validar_dv, formatear_run, validar_contrasena  # Ajusta si tus validadores están en otro módulo
 
 class RegistroVecinoForm(forms.ModelForm):
     run = forms.CharField(label="RUN", max_length=15)
@@ -21,6 +20,8 @@ class RegistroVecinoForm(forms.ModelForm):
         label="Repetir contraseña",
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
+
+    # Evidencia de residencia
     evidencia = forms.FileField(
         label="Evidencia de residencia (boleta, certificado, etc.)",
         required=False,
@@ -72,12 +73,16 @@ class RegistroVecinoForm(forms.ModelForm):
         # Hashear contraseña
         obj.contrasena = make_password(self.cleaned_data['contrasena'])
 
+        # 🖼️ Asignar imagen por defecto si no hay foto
+        if not obj.foto:
+            obj.foto = 'perfiles/default.png'
+
         if commit:
             obj.save()
         return obj
 
 
-# ✅ Clase separada para actualizar solo la foto
+
 class FotoPerfilForm(forms.ModelForm):
     class Meta:
         model = Vecino
