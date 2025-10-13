@@ -1,9 +1,74 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container py-5 text-center">
-  <h2 class="text-success"> Opciones de Directiva </h2>
+{% load static %}
 
-  <a href="/usuarios/validacion/pendientes" class="btn btn-primary mt-3">Solicitudes de Registro</a>
-    <a href="{% url 'gestion_usuarios' %}" class="btn btn-primary mt-3">Gestión de Usuarios</a>
+{% block title %}Gestión de la Directiva{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-5 text-primary fw-bold">
+    <i class="fa-solid fa-users-gear me-2"></i>Opciones de la Directiva
+  </h2>
+
+  <div class="row justify-content-center g-4">
+
+    <!-- Solicitudes de Registro -->
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100 text-center"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        <div class="card-body">
+          <i class="fa-solid fa-id-card-clip fa-3x text-primary mb-3"></i>
+          <h5 class="card-title text-light">Solicitudes de Registro</h5>
+          <p class="card-text">
+            Revisa y aprueba a los vecinos pendientes de validación.
+          </p>
+          <a href="{% url 'usuarios_pendientes' %}" class="btn btn-outline-primary w-100">
+            <i class="fa-solid fa-list-check me-1"></i> Gestionar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gestión de Usuarios -->
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100 text-center"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        <div class="card-body">
+          <i class="fa-solid fa-user-gear fa-3x text-warning mb-3"></i>
+          <h5 class="card-title text-light">Gestión de Usuarios</h5>
+          <p class="card-text">
+            Activa, desactiva o cambia los roles de los vecinos registrados.
+          </p>
+          <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline-warning w-100">
+            <i class="fa-solid fa-users me-1"></i> Administrar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gestión de Espacios Comunales -->
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100 text-center"
+            style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        <div class="card-body">
+          <i class="fa-solid fa-building fa-3x text-success mb-3"></i>
+          <h5 class="card-title text-light">Espacios Comunales</h5>
+          <p class="card-text">
+            Agrega, modifica o elimina los espacios comunales disponibles para reservas.
+          </p>
+          <a href="{% url 'gestionar_espacios' %}" class="btn btn-outline-success w-100">
+            <i class="fa-solid fa-door-open me-1"></i> Gestionar Espacios
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<style>
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);
+  }
+</style>
 {% endblock %}

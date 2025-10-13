@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ modo|title }} Espacio Comunal{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="p-4">
+    <h3 class="text-center text-light mb-4">
+      {% if modo == 'crear' %}
+        <i class="fa-solid fa-plus-circle text-primary"></i> Agregar Nuevo Espacio Comunal
+      {% else %}
+        <i class="fa-solid fa-pen-to-square text-warning"></i> Editar Espacio Comunal
+      {% endif %}
+    </h3>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+      {% csrf_token %}
+
+      <!-- Nombre -->
+      <div class="col-md-6">
+        <label for="id_nombre" class="form-label text-light">Nombre del Espacio</label>
+        {{ form.nombre }}
+      </div>
+
+      <!-- Monto por Hora -->
+      <div class="col-md-6">
+        <label for="id_monto_hora" class="form-label text-light">Monto por Hora</label>
+        {{ form.monto_hora }}
+      </div>
+
+      <!-- Descripción -->
+      <div class="col-12">
+        <label for="id_descripcion" class="form-label text-light">Descripción</label>
+        {{ form.descripcion }}
+      </div>
+
+      <!-- Imagen -->
+      <div class="col-md-6">
+        <label for="id_imagen" class="form-label text-light">Imagen del Espacio</label>
+        {{ form.imagen }}
+        <small class="text-muted d-block mt-1">Formatos permitidos: JPG, PNG. Tamaño máximo recomendado: 2 MB.</small>
+      </div>
+
+      <!-- Imagen previa (modo edición) -->
+      {% if modo == 'editar' and form.instance.imagen %}
+      <div class="col-md-6 text-center">
+        <label class="form-label text-light d-block">Imagen Actual</label>
+        <img src="{{ form.instance.imagen.url }}" alt="Imagen actual" class="img-thumbnail" width="180" style="object-fit: cover;">
+      </div>
+      {% endif %}
+
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary px-4">
+          <i class="fa-solid fa-save me-1"></i> Guardar
+        </button>
+        <a href="{% url 'gestionar_espacios' %}" class="btn btn-secondary ms-2 px-4">
+          <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

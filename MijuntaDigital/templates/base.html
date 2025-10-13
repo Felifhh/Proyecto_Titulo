@@ -14,76 +14,83 @@
 </head>
 
 <body class="text-light" style="background-color: var(--color-bg);">
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg navbar-dark sticky-top" 
-       style="background-color: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border);">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
-        <i class="fa-solid fa-building-columns me-2 text-primary"></i>Mi Junta Digital
-      </a>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" 
+     style="background-color: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border);">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
+      <i class="fa-solid fa-building-columns me-2 text-primary"></i>Mi Junta Digital
+    </a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto align-items-center">
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
 
-          {% if request.session.vecino_id %}
-          <!-- Usuario logueado -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" 
-               role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {{ request.session.vecino_nombre }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" 
-                style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
-              <li>
-                <a class="dropdown-item text-light" href="{% url 'perfil_vecino' request.session.vecino_id %}">
-                  <i class="fa-solid fa-user me-2 text-primary"></i>Mi perfil
-                </a>
-              </li>
-              <li><hr class="dropdown-divider border-secondary"></li>
-              <li>
-                <a class="dropdown-item text-light" href="{% url 'proyectos_todos' %}">
-                  <i class="fa-solid fa-lightbulb me-2 text-primary"></i>Proyectos Vecinales
-                </a>
-              </li>
-              <li><hr class="dropdown-divider border-secondary"></li>
-              <li>
-                <a class="dropdown-item text-danger" href="{% url 'usuarios_logout' %}">
-                  <i class="fa-solid fa-right-from-bracket me-2"></i>Cerrar sesión
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% else %}
-          <!-- Invitado -->
-          <li class="nav-item">
-            <a class="nav-link text-light" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar sesión
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-primary" href="{% url 'usuarios_registro' %}">
-              <i class="fa-solid fa-user-plus me-1"></i> Registrarme
-            </a>
-          </li>
-          {% endif %}
+        {% if request.session.vecino_id %}
+        <!-- Usuario logueado -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" 
+             role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ request.session.vecino_nombre }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" 
+              style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+            
+            <li>
+              <a class="dropdown-item text-light" href="{% url 'perfil_vecino' request.session.vecino_id %}">
+                <i class="fa-solid fa-user me-2 text-primary"></i>Mi perfil
+              </a>
+            </li>
+            <li><hr class="dropdown-divider border-secondary"></li>
 
-          {% if request.session.vecino_rol and request.session.vecino_rol|lower == "presidente" %}
-          <li class="nav-item">
-            <a class="nav-link text-warning" href="{% url 'Directiva' %}">
-              <i class="fa-solid fa-users-gear me-1"></i> Gestión
-            </a>
-          </li>
-          {% endif %}
+            <li>
+              <a class="dropdown-item text-light" href="{% url 'proyectos_todos' %}">
+                <i class="fa-solid fa-lightbulb me-2 text-primary"></i>Proyectos Vecinales
+              </a>
+            </li>
 
-        </ul>
-      </div>
+            <li><hr class="dropdown-divider border-secondary"></li>
+
+
+            <li><hr class="dropdown-divider border-secondary"></li>
+            <li>
+              <a class="dropdown-item text-danger" href="{% url 'usuarios_logout' %}">
+                <i class="fa-solid fa-right-from-bracket me-2"></i>Cerrar sesión
+              </a>
+            </li>
+          </ul>
+        </li>
+        {% else %}
+        <!-- Invitado -->
+        <li class="nav-item">
+          <a class="nav-link text-light" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+            <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar sesión
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-primary" href="{% url 'usuarios_registro' %}">
+            <i class="fa-solid fa-user-plus me-1"></i> Registrarme
+          </a>
+        </li>
+        {% endif %}
+
+        {% if request.session.vecino_rol and request.session.vecino_rol|lower in "presidente, secretario, tesorero" %}
+        <li class="nav-item">
+          <a class="nav-link text-warning" href="{% url 'Directiva' %}">
+            <i class="fa-solid fa-users-gear me-1"></i> Gestión
+          </a>
+        </li>
+        {% endif %}
+
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <!-- CONTENIDO -->
   <main class="container mt-4">
