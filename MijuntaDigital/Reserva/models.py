@@ -34,9 +34,10 @@ class Reserva(models.Model):
     fecha = models.DateField()
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='Pendiente')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='Activa')
     observacion = models.CharField(max_length=255, blank=True, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    total = models.IntegerField()
 
     class Meta:
         db_table = 'reserva'

@@ -26,7 +26,7 @@ class Vecino(models.Model):
     fecha_registro = models.DateTimeField(auto_now_add=True)
     id_rol = models.ForeignKey('Rol', on_delete=models.DO_NOTHING, db_column='id_rol')
     estado = models.CharField(max_length=15, default='Pendiente')
-    foto = models.ImageField(upload_to='perfiles/', null=True, blank=True)
+    foto = models.ImageField(upload_to='perfiles/', default='perfiles/default.png', blank=True, null=True)
     evidencia = models.FileField(upload_to='evidencias_vecinos/', null=True, blank=True)
 
     class Meta:
