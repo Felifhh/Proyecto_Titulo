@@ -1,35 +1,36 @@
-from functools import wraps
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
-from .models import Vecino
+from Usuarios.models import Vecino
 
-def require_role(*allowed_roles):
+def require_role(allowed_roles):
     """
-    Decorador que exige sesión activa y un rol específico.
-    Si no hay sesión → redirige a /usuarios/login/
-    Si el rol no está permitido → redirige al home.
+    Decorador que restringe acceso según el rol del usuario.
+    Acepta string o lista de roles, y agrega 'request.vecino' al request.
     """
+    if isinstance(allowed_roles, str):
+        allowed_roles = [allowed_roles]
+
     allowed = {r.lower() for r in allowed_roles}
 
     def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
+        def wrapper(request, *args, **kwargs):
             vecino_id = request.session.get("vecino_id")
+            vecino_rol = (request.session.get("vecino_rol") or "").lower()
+
+            # Si no está autenticado
             if not vecino_id:
-                return redirect('usuarios_login')
+                messages.error(request, "Debes iniciar sesión para acceder a esta sección.")
+                return redirect("home")
 
-            try:
-                vecino = Vecino.objects.select_related('id_rol').get(pk=vecino_id)
-            except Vecino.DoesNotExist:
-                messages.error(request, "Tu sesión no es válida.")
-                return redirect('usuarios_login')
+            # Si su rol no está permitido
+            if vecino_rol not in allowed:
+                messages.error(request, "No tienes permisos para acceder a esta sección.")
+                return redirect("home")
 
-            rol_nombre = (vecino.id_rol.nombre or '').strip().lower()
-            if rol_nombre not in allowed:
-                messages.error(request, "No tienes permiso para acceder a esta sección.")
-                return redirect('home')
+            # ✅ Cargar el objeto del vecino autenticado
+            request.vecino = get_object_or_404(Vecino, pk=vecino_id)
+            request.vecino_rol = vecino_rol
 
-            request.vecino = vecino
             return view_func(request, *args, **kwargs)
-        return _wrapped_view
+        return wrapper
     return decorator

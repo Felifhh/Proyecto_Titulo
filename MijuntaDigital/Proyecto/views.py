@@ -10,7 +10,7 @@ import os
 # -----------------------------
 # CREACIÓN DE PROYECTOS
 # -----------------------------
-@require_role('vecino', 'presidente', 'secretario', 'tesorero')
+@require_role(['vecino', 'presidente', 'secretario', 'tesorero'])
 def crear_postulacion(request):
     vecino = request.vecino
 
@@ -79,7 +79,7 @@ def crear_postulacion(request):
                 fecha_postulacion=None
             )
 
-            messages.success(request, "✅ Postulación creada correctamente con imagen de referencia.")
+            messages.success(request, " Postulación creada correctamente con imagen de referencia.")
             return redirect('proyectos_lista')
 
         else:
@@ -93,7 +93,7 @@ def crear_postulacion(request):
 # -----------------------------
 # LISTAR POSTULACIONES PROPIAS
 # -----------------------------
-@require_role('vecino', 'presidente', 'secretario', 'tesorero')
+@require_role(['vecino', 'presidente', 'secretario', 'tesorero'])
 def lista_postulaciones(request):
     """Muestra los proyectos del vecino actual con orden de prioridad."""
     vecino = request.vecino
@@ -114,7 +114,7 @@ def lista_postulaciones(request):
 # -----------------------------
 # LISTAR TODAS LAS POSTULACIONES (solo aprobadas)
 # -----------------------------
-@require_role('presidente', 'secretario', 'tesorero', 'vecino')
+@require_role(['presidente', 'secretario', 'tesorero', 'vecino'])
 def lista_todos_proyectos(request):
     """Muestra solo los proyectos aprobados (aceptados) por el directorio."""
     proyectos = Proyecto.objects.select_related('id_vecino').filter(

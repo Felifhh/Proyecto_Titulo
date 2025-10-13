@@ -185,7 +185,8 @@ def perfil_vecino(request, id_vecino):
     # Datos de actividad reciente
     certificados = Certificado.objects.filter(id_vecino=perfil).order_by("-fecha_emision")[:5]
     solicitudes = Solicitud.objects.filter(id_vecino=perfil).order_by("-fecha_creacion")[:5]
-    reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha_reserva")[:5]
+    reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
+
 
     # -----------------------------
     # CAMBIO DE ROL (solo Presidente)
