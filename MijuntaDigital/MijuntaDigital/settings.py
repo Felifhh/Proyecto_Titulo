@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 
     # Aplicaciones del proyecto
     'Usuarios',
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
     'Noticia',
     'Documentos',
     'Auditoria',
+    'pagos',
 
     # Utilidad
     'widget_tweaks',
@@ -136,3 +138,12 @@ USE_TZ = True
 # ID AUTO
 # =========================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+
+# =========================================
+# Webpay Transbank Config (modo test)
+# =========================================
+WEBPAY_COMMERCE_CODE = "597055555532"  # Código de comercio de prueba
+WEBPAY_API_KEY = "579B532A7440BB0C9079DED94D31EA161EB9A1A1F9123A2B1D1F52A6E57A4E97"
+WEBPAY_ENVIRONMENT = "TEST"

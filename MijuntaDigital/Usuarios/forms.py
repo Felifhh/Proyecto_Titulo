@@ -73,7 +73,7 @@ class RegistroVecinoForm(forms.ModelForm):
         # Hashear contraseña
         obj.contrasena = make_password(self.cleaned_data['contrasena'])
 
-        # 🖼️ Asignar imagen por defecto si no hay foto
+        #  Asignar imagen por defecto si no hay foto
         if not obj.foto:
             obj.foto = 'perfiles/default.png'
 

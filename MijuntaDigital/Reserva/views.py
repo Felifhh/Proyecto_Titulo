@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from Usuarios.decorators import require_role
@@ -7,6 +8,19 @@ from django.utils.timezone import make_aware
 from Usuarios.models import Vecino
 from .models import Reserva, EspacioComunal
 from .forms import ReservaForm
+from django.views.decorators.clickjacking import xframe_options_exempt
+import requests
+from django.urls import reverse
+from transbank.webpay.webpay_plus.transaction import Transaction
+
+def notificar_n8n(evento, datos):
+    webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
+    try:
+        requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
+        print(f" Evento '{evento}' enviado correctamente a n8n.")
+    except Exception as e:
+        print(f" Error enviando evento a n8n: {e}")
+
 
 @require_role(['presidente', 'secretario', 'tesorero'])
 def gestionar_espacios(request):
@@ -137,10 +151,8 @@ def ver_espacios_comunales(request):
     return render(request, "Reserva/ver_espacios.html", {"espacios": espacios})
 
 
+
 def reservar_desde_catalogo(request, id_espacio):
-    """
-    Permite reservar un espacio comunal por horas exactas (08:00–20:00).
-    """
     if not request.session.get("vecino_id"):
         messages.error(request, "Debes iniciar sesión para reservar un espacio.")
         return redirect("home")
@@ -151,40 +163,59 @@ def reservar_desde_catalogo(request, id_espacio):
     if request.method == "POST":
         form = ReservaForm(request.POST)
         if form.is_valid():
-            reserva = form.save(commit=False)
-            reserva.id_vecino = vecino
-            reserva.id_espacio = espacio
-            reserva.estado = "Activa" 
+            reserva_temp = form.save(commit=False)
+            hora_inicio = reserva_temp.hora_inicio
+            hora_fin = reserva_temp.hora_fin
 
-            # Ya son objetos datetime.time, no hace falta convertir
-            hora_inicio = reserva.hora_inicio
-            hora_fin = reserva.hora_fin
-
-            # Validar rango permitido
+            # Rango permitido 08:00–20:00
             if hora_inicio.hour < 8 or hora_fin.hour > 20:
                 messages.error(request, "Las reservas deben estar entre las 08:00 y las 20:00.")
                 return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
 
-            # Validar conflictos
+            # Conflictos (solapamiento)
             conflicto = Reserva.objects.filter(
                 id_espacio=espacio,
-                fecha=reserva.fecha,
+                fecha=reserva_temp.fecha,
                 hora_inicio__lt=hora_fin,
                 hora_fin__gt=hora_inicio,
                 estado__in=["Activa"]
             ).exists()
-
             if conflicto:
                 messages.error(request, "El espacio ya está reservado en ese horario.")
                 return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
 
-            # Calcular monto (por horas exactas)
+            # Validar horas y calcular costo
             horas = hora_fin.hour - hora_inicio.hour
-            reserva.total = espacio.monto_hora * horas
-            reserva.save()
+            if horas <= 0:
+                messages.error(request, "La hora de término debe ser mayor a la de inicio.")
+                return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
 
-            messages.success(request, f"Reserva enviada correctamente. Monto total: ${reserva.total:,}.")
-            return redirect("mis_reservas")
+            total = espacio.monto_hora * horas
+
+            # 💳 Generar transacción Webpay (no guardar reserva todavía)
+            buy_order = f"RSV-{vecino.id_vecino}-{int(timezone.now().timestamp())}"
+            session_id = request.session.session_key or str(vecino.id_vecino)
+            return_url = request.build_absolute_uri(reverse("retorno_pago_reserva"))
+
+            tx = Transaction()
+            tx.configure_for_testing()
+            response = tx.create(buy_order, session_id, total, return_url)
+
+            # Guardamos datos temporales en sesión para crear la reserva solo si el pago es exitoso
+            request.session["reserva_pago"] = {
+                "vecino_id": vecino.id_vecino,
+                "espacio_id": espacio.id_espacio,
+                "fecha": str(reserva_temp.fecha),
+                "hora_inicio": hora_inicio.strftime("%H:%M"),
+                "hora_fin": hora_fin.strftime("%H:%M"),
+                "total": total,
+            }
+
+            # Redirigir al formulario Webpay
+            return render(request, "pagos/iniciar_pago.html", {
+                "url": response["url"],
+                "token": response["token"],
+            })
 
         else:
             messages.error(request, "Hay errores en el formulario.")
@@ -194,6 +225,7 @@ def reservar_desde_catalogo(request, id_espacio):
             form.fields["id_espacio"].disabled = True
 
     return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
+
 
 
 
@@ -244,3 +276,6 @@ def ver_disponibilidad(request, id_espacio):
         "fecha": fecha,
         "bloques": bloques
     })
+
+
+

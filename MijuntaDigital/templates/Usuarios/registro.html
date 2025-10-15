@@ -63,7 +63,7 @@
               <label class="form-label fw-semibold">Contraseña</label>
               {{ form.contrasena }}
               {% if form.contrasena.help_text %}
-                <small class="text-muted">{{ form.contrasena.help_text }}</small>
+                <small>{{ form.contrasena.help_text }}</small>
               {% endif %}
             </div>
 
@@ -79,7 +79,7 @@
                 Evidencia de residencia (Documento o imagen)
               </label>
               {{ form.evidencia|add_class:"form-control" }}
-              <small class="text-muted">Puedes subir una boleta de servicios, certificado o foto del comprobante.</small>
+              <small>Puedes subir una boleta de servicios, certificado o foto del comprobante.</small>
             </div>
 
           </div>

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Detalle Actividad{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card bg-dark text-light border-secondary shadow">
+    <div class="card-header bg-info text-center fw-bold">
+      <i class="fa-solid fa-circle-info me-1"></i> Detalle de Actividad
+    </div>
+
+    <div class="card-body">
+      <!-- Título y descripción -->
+      <h3 class="text-info">{{ actividad.titulo }}</h3>
+      {% if actividad.descripcion %}
+        <p>{{ actividad.descripcion }}</p>
+      {% endif %}
+
+      <!-- Información principal -->
+      <ul class="list-unstyled small">
+        <li><i class="fa-solid fa-location-dot me-1"></i> <strong>Ubicación:</strong> {{ actividad.ubicacion }}</li>
+        <li><i class="fa-regular fa-calendar me-1"></i> <strong>Fecha:</strong> {{ actividad.fecha|date:"d/m/Y" }}</li>
+        <li><i class="fa-regular fa-clock me-1"></i> <strong>Horario:</strong> {{ actividad.hora_inicio }} - {{ actividad.hora_fin }}</li>
+        <li><i class="fa-solid fa-user-group me-1"></i> <strong>Cupos disponibles:</strong> {{ disponibles }}</li>
+        <li><i class="fa-solid fa-signal me-1"></i> <strong>Estado:</strong>
+          <span class="badge bg-{{ actividad.estado|lower }}">{{ actividad.estado }}</span>
+        </li>
+        <li><i class="fa-solid fa-user me-1"></i> <strong>Creador:</strong> {{ actividad.id_vecino.nombre }}</li>
+      </ul>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="mt-3">
+        {% if actividad.estado == "Activa" %}
+          {% if request.session.vecino_id == actividad.id_vecino.id_vecino %}
+            <!-- Creador: puede cancelar -->
+            <a href="{% url 'cancelar_actividad' actividad.id_actividad %}" class="btn btn-danger">
+              <i class="fa-solid fa-ban me-1"></i> Cancelar Actividad
+            </a>
+          {% else %}
+            <!-- Otros vecinos: inscribirse o cancelar inscripción -->
+            <a href="{% url 'inscribirse_actividad' actividad.id_actividad %}" class="btn btn-success me-2">
+              <i class="fa-solid fa-user-plus"></i> Inscribirme
+            </a>
+            <a href="{% url 'cancelar_inscripcion' actividad.id_actividad %}" class="btn btn-outline-warning">
+              <i class="fa-solid fa-user-xmark"></i> Cancelar Inscripción
+            </a>
+          {% endif %}
+
+        {% elif actividad.estado == "Finalizada" %}
+          <div class="alert alert-secondary text-center mt-3">
+            <i class="fa-solid fa-flag-checkered me-1"></i>
+            Esta actividad ha finalizado.
+          </div>
+
+        {% elif actividad.estado == "Cancelada" %}
+          <div class="alert alert-danger text-center mt-3">
+            <i class="fa-solid fa-ban me-1"></i>
+            Esta actividad fue cancelada.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- BOTÓN VOLVER -->
+      <div class="mt-4 text-center">
+        <a href="{% url 'lista_actividades' %}" class="btn btn-secondary">
+          <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

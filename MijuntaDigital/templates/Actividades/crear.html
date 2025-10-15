@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Crear Actividad{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card bg-dark text-light border-secondary shadow">
+        <div class="card-header bg-success text-center fw-bold">
+            <i class="fa-solid fa-plus-circle me-1"></i> Crear Nueva Actividad
+        </div>
+        <div class="card-body">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.titulo.id_for_label }}">Título</label>
+                    {{ form.titulo }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.ubicacion.id_for_label }}">Ubicación</label>
+                    {{ form.ubicacion }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                    {{ form.descripcion }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.fecha.id_for_label }}">Fecha</label>
+                        {{ form.fecha }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.hora_inicio.id_for_label }}">Hora inicio</label>
+                        {{ form.hora_inicio }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.hora_fin.id_for_label }}">Hora fin</label>
+                        {{ form.hora_fin }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.cupos.id_for_label }}">Cupos</label>
+                    {{ form.cupos }}
+                </div>
+
+                <!-- Select de reservas con data-* para autocompletar -->
+                <div class="mb-3">
+                    <label class="form-label" for="id_vincular_reserva">Vincular a mi reserva</label>
+                    <select name="vincular_reserva" id="id_vincular_reserva" class="form-select">
+                        <option value="">— Sin vincular —</option>
+                        {% for r in form.fields.vincular_reserva.queryset %}
+                        <option value="{{ r.pk }}" data-fecha="{{ r.fecha|date:'Y-m-d' }}"
+                            data-inicio="{{ r.hora_inicio }}" data-fin="{{ r.hora_fin }}">
+                            {{ r.id_espacio.nombre }} — {{ r.fecha|date:"d/m/Y" }} • {{ r.hora_inicio|time:"H:i" }} – {{ r.hora_fin|time:"H:i" }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.vincular_reserva.errors %}
+                    <div class="text-danger small">{{ form.vincular_reserva.errors }}</div>
+                    {% endif %}
+                </div>
+
+
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-save me-1"></i> Guardar Actividad
+                    </button>
+                    <a href="{% url 'lista_actividades' %}" class="btn btn-secondary">
+                        <i class="fa-solid fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JS mínimo para autorrellenar -->
+<script src="{% static 'js/vincular_reserva.js' %}"></script>
+{% endblock %}

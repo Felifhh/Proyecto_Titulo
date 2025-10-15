@@ -1,6 +1,7 @@
 <!doctype html>
 {% load static %}
 <html lang="es">
+
 <head>
   <meta charset="utf-8">
   <title>Inicio - Mi Junta Digital</title>
@@ -14,97 +15,117 @@
 </head>
 
 <body class="text-light" style="background-color: var(--color-bg);">
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top" 
-     style="background-color: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border);">
-  <div class="container-fluid">
-    <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
-      <i class="fa-solid fa-building-columns me-2 text-primary"></i>Mi Junta Digital
-    </a>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top"
+    style="background-color: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border);">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
+        <i class="fa-solid fa-building-columns me-2 text-primary"></i>Mi Junta Digital
+      </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-center">
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center">
 
-        {% if request.session.vecino_id %}
-        <!-- Usuario logueado -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" 
-             role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {{ request.session.vecino_nombre }}
-          </a>
-          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" 
+          {% if request.session.vecino_id %}
+          <!-- Usuario logueado -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              {{ request.session.vecino_nombre }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
               style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
-            
-            <li>
-              <a class="dropdown-item text-light" href="{% url 'perfil_vecino' request.session.vecino_id %}">
-                <i class="fa-solid fa-user me-2 text-primary"></i>Mi perfil
-              </a>
-            </li>
-            <li><hr class="dropdown-divider border-secondary"></li>
 
-            <li>
-              <a class="dropdown-item text-light" href="{% url 'proyectos_todos' %}">
-                <i class="fa-solid fa-lightbulb me-2 text-primary"></i>Proyectos Vecinales
-              </a>
-            </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'perfil_vecino' request.session.vecino_id %}">
+                  <i class="fa-solid fa-user me-2 text-primary"></i>Mi perfil
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
 
-            <li><hr class="dropdown-divider border-secondary"></li>
-
-
-            <li><hr class="dropdown-divider border-secondary"></li>
-            <li>
-              <a class="dropdown-item text-danger" href="{% url 'usuarios_logout' %}">
-                <i class="fa-solid fa-right-from-bracket me-2"></i>Cerrar sesión
-              </a>
-            </li>
-          </ul>
-        </li>
-        {% else %}
-        <!-- Invitado -->
-        <li class="nav-item">
-          <a class="nav-link text-light" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
-            <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar sesión
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-primary" href="{% url 'usuarios_registro' %}">
-            <i class="fa-solid fa-user-plus me-1"></i> Registrarme
-          </a>
-        </li>
-        {% endif %}
-
-        {% if request.session.vecino_rol and request.session.vecino_rol|lower in "presidente, secretario, tesorero" %}
-        <li class="nav-item">
-          <a class="nav-link text-warning" href="{% url 'Directiva' %}">
-            <i class="fa-solid fa-users-gear me-1"></i> Gestión
-          </a>
-        </li>
-        {% endif %}
-<!-- Visible para todos los usuarios autenticados -->
-        {% if request.session.vecino_id %}
-<li class="nav-item">
-  <a class="nav-link text-success" href="{% url 'ver_espacios_comunales' %}">
-    <i class="fa-solid fa-building me-1"></i> Reserva Espacios
-  </a>
-</li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'proyectos_todos' %}">
+                  <i class="fa-solid fa-lightbulb me-2 text-primary"></i>Proyectos Vecinales
+                </a>
+              </li>
 
 
-        <li class="nav-item">
-          <a class="nav-link text-light" href="{% url 'mis_reservas' %}">
-            <i class="fa-solid fa-list-ul me-1 text-info"></i> Mis Reservas
-        </a>
-        </li>
-        {% endif %}
+              <!-- Visible para todos los usuarios autenticados -->
+              {% if request.session.vecino_id %}
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'ver_espacios_comunales' %}">
+                  <i class="fa-solid fa-building me-1"></i> Reserva Espacios
+                </a>
+              </li>
 
-      </ul>
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'mis_reservas' %}">
+                  <i class="fa-solid fa-list-ul me-1 text-info"></i> Mis Reservas
+                </a>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'lista_actividades' %}">
+                  <i class="fa-solid fa-list-ul me-1 text-info"></i> Actividades
+                </a>
+              </li>
+
+              {% endif %}
+
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-danger" href="{% url 'usuarios_logout' %}">
+                  <i class="fa-solid fa-right-from-bracket me-2"></i>Cerrar sesión
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% else %}
+          <!-- Invitado -->
+          <li class="nav-item">
+            <a class="nav-link text-light" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+              <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar sesión
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-primary" href="{% url 'usuarios_registro' %}">
+              <i class="fa-solid fa-user-plus me-1"></i> Registrarme
+            </a>
+          </li>
+          {% endif %}
+
+          {% if request.session.vecino_rol and request.session.vecino_rol|lower in "presidente, secretario, tesorero" %}
+          <li class="nav-item">
+            <a class="nav-link text-warning" href="{% url 'Directiva' %}">
+              <i class="fa-solid fa-users-gear me-1"></i> Gestión
+            </a>
+          </li>
+          {% endif %}
+
+
+        </ul>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
 
   <!-- CONTENIDO -->
@@ -116,17 +137,17 @@
   {% if messages %}
   <div class="container mt-3">
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-      </div>
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
     {% endfor %}
   </div>
   {% endif %}
 
   <!-- FOOTER -->
-  <footer class="text-center mt-5 py-4" 
-          style="background-color: var(--color-bg-secondary); border-top: 1px solid var(--color-border); color: var(--color-text-muted);">
+  <footer class="text-center mt-5 py-4"
+    style="background-color: var(--color-bg-secondary); border-top: 1px solid var(--color-border); color: var(--color-text-muted);">
     <p class="mb-1">&copy; 2025 <strong>Mi Junta Digital</strong> · Todos los derechos reservados</p>
     <small>Desarrollado para capstone</small>
   </footer>
@@ -138,12 +159,14 @@
   <!-- MODAL LOGIN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content" style="background-color: var(--color-bg-secondary); color: var(--color-text); border: 1px solid var(--color-border);">
+      <div class="modal-content"
+        style="background-color: var(--color-bg-secondary); color: var(--color-text); border: 1px solid var(--color-border);">
         <form method="post" action="{% url 'usuarios_login' %}">
           {% csrf_token %}
           <div class="modal-header border-bottom" style="border-color: var(--color-border);">
             <h5 class="modal-title text-primary">Iniciar sesión</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+              aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
@@ -164,4 +187,5 @@
     </div>
   </div>
 </body>
+
 </html>

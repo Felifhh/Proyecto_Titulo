@@ -8,6 +8,19 @@ import os
 from .models import Certificado
 from Usuarios.models import Vecino
 from .utils import generar_folio, generar_qr
+from .forms import SolicitudCertificadoForm
+from django.shortcuts import get_object_or_404
+import requests
+from transbank.webpay.webpay_plus.transaction import Transaction
+from django.urls import reverse
+
+def notificar_n8n(evento, datos):
+    webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
+    try:
+        requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
+        print(f" Evento '{evento}' enviado correctamente a n8n.")
+    except Exception as e:
+        print(f" Error enviando evento a n8n: {e}")
 
 
 def solicitar_certificado(request):
@@ -16,27 +29,33 @@ def solicitar_certificado(request):
         messages.error(request, "Debes iniciar sesión para solicitar un certificado.")
         return redirect("home")
 
-    vecino = Vecino.objects.get(pk=vecino_id)
+    vecino = get_object_or_404(Vecino, pk=vecino_id)
     ahora = timezone.now()
     DURACION_CERTIFICADO = timedelta(days=30)
 
-    #  Buscar certificado del vecino
+    #  Buscar certificado existente
     cert_existente = Certificado.objects.filter(
         id_vecino=vecino,
         tipo="Residencia"
-    ).first()
+    ).order_by('-fecha_emision').first()
 
-    # Si ya tiene un certificado vigente → mostrarlo directamente
-    if cert_existente and cert_existente.fecha_emision and cert_existente.fecha_emision + DURACION_CERTIFICADO > ahora:
-        messages.info(request, "Ya tienes un certificado vigente.")
-        return render(
-            request,
-            "Certificados/certificado_detalle.html",
-            {"certificado": cert_existente, "vecino": vecino}
-        )
+    #  Si ya tiene un certificado vigente
+    if cert_existente and cert_existente.estado == "Emitido" and cert_existente.fecha_emision:
+        if cert_existente.fecha_emision + DURACION_CERTIFICADO > ahora:
+            messages.info(request, "Ya tienes un certificado vigente emitido hace menos de 30 días.")
+            return render(
+                request,
+                "Certificados/certificado_detalle.html",
+                {"certificado": cert_existente, "vecino": vecino}
+            )
 
-    # Si tenía uno vencido → borrar QR y registro anterior
-    if cert_existente:
+    #  Si tiene una solicitud pendiente
+    if Certificado.objects.filter(id_vecino=vecino, tipo="Residencia", estado="Pendiente").exists():
+        messages.warning(request, "Ya tienes una solicitud pendiente de revisión.")
+        return redirect("mis_certificados")
+
+    #  Si tenía uno vencido → eliminar QR y registro
+    if cert_existente and cert_existente.estado == "Emitido":
         if cert_existente.qr_code:
             old_path = cert_existente.qr_code.replace('/media/', '').replace('\\', '/')
             full_path = os.path.join(settings.MEDIA_ROOT, old_path)
@@ -44,40 +63,139 @@ def solicitar_certificado(request):
                 os.remove(full_path)
         cert_existente.delete()
 
-    #  Generar nuevo folio y QR
+    #  Si se envía el formulario → redirigir a Webpay antes de crear el registro
+    if request.method == "POST":
+        form = SolicitudCertificadoForm(request.POST)
+        if form.is_valid():
+            amount = 1500
+            buy_order = f"CERT-{vecino.id_vecino}-{int(timezone.now().timestamp())}"
+            session_id = request.session.session_key or str(vecino.id_vecino)
+            return_url = request.build_absolute_uri(reverse("retorno_pago_certificado"))
+
+            tx = Transaction()
+            tx.configure_for_testing()
+            response = tx.create(buy_order, session_id, amount, return_url)
+
+            # Guardamos datos temporales en sesión (aún no se crea el certificado)
+            request.session["certificado_pago"] = {
+                "vecino_id": vecino.id_vecino, 
+                "tipo": "Residencia",
+                "amount": amount,
+                "token": response["token"],
+            }
+
+            return render(request, "pagos/iniciar_pago.html", {
+                "url": response["url"],
+                "token": response["token"],
+            })
+    else:
+        form = SolicitudCertificadoForm()
+
+    return render(request, "Certificados/solicitar_certificado.html", {"form": form})
+
+
+from Usuarios.decorators import require_role
+
+@require_role(['presidente', 'secretario', 'tesorero'])
+def revisar_certificados(request):
+    certificados = Certificado.objects.filter(tipo="Residencia").order_by('-id_certificado')
+    return render(request, "Certificados/revisar_certificados.html", {"certificados": certificados})
+
+
+@require_role(['presidente', 'secretario', 'tesorero'])
+def aprobar_certificado(request, id_certificado):
+    cert = get_object_or_404(Certificado, pk=id_certificado)
+
+    if cert.estado != "Pendiente":
+        messages.warning(request, "Este certificado ya fue procesado.")
+        return redirect("revisar_certificados")
+
+    # Generar folio y QR
     folio = generar_folio()
-    qr_rel_path = generar_qr(folio)  # ej: 'qr_codes/RES-20251007230141.png'
+    qr_rel_path = generar_qr(folio)
     qr_url = f"{settings.MEDIA_URL}{qr_rel_path}"
 
-    # Crear el nuevo certificado
-    certificado = Certificado.objects.create(
-        id_vecino=vecino,
-        tipo="Residencia",
-        fecha_emision=ahora,
-        folio=folio,
-        qr_code=qr_url,
-        estado="Emitido"
-    )
+    cert.folio = folio
+    cert.qr_code = qr_url
+    cert.estado = "Emitido"
+    cert.fecha_emision = timezone.now()
+    cert.save()
 
-    messages.success(request, "Certificado generado correctamente.")
-    return render(
-        request,
-        "Certificados/certificado_detalle.html",
-        {"certificado": certificado, "vecino": vecino}
-    )
+    #  Notificar a n8n
+    vecino = cert.id_vecino
+    notificar_n8n("documento_aceptado", {
+        "nombre": vecino.nombre,
+        "correo": vecino.correo,
+        "run": vecino.run
+    })
+
+    messages.success(request, f"Certificado de {vecino.nombre} emitido correctamente.")
+    return redirect("revisar_certificados")
 
 
+@require_role(['presidente', 'secretario', 'tesorero'])
+def rechazar_certificado(request, id_certificado):
+    cert = get_object_or_404(Certificado, pk=id_certificado)
+
+    if cert.estado != "Pendiente":
+        messages.warning(request, "Este certificado ya fue procesado.")
+        return redirect("revisar_certificados")
+
+    cert.estado = "Rechazado"
+    cert.fecha_emision = timezone.now()
+    cert.save()
+
+    #  Notificar a n8n
+    vecino = cert.id_vecino
+    notificar_n8n("documento_rechazado", {
+        "nombre": vecino.nombre,
+        "correo": vecino.correo,
+        "run": vecino.run
+    })
+
+    messages.error(request, f"Solicitud de {vecino.nombre} rechazada.")
+    return redirect("revisar_certificados")
+
+
+def mis_certificados(request):
+    if not request.session.get("vecino_id"):
+        messages.error(request, "Debes iniciar sesión para ver tus certificados.")
+        return redirect("home")
+
+    vecino = get_object_or_404(Vecino, pk=request.session["vecino_id"])
+    certificados = Certificado.objects.filter(id_vecino=vecino, tipo="Residencia").order_by('-id_certificado')
+
+    return render(request, "Certificados/mis_certificados.html", {"certificados": certificados})
+
+def ver_certificado(request, id_certificado):
+    """
+    Permite al vecino ver o descargar su certificado si está emitido.
+    """
+    cert = get_object_or_404(Certificado, pk=id_certificado)
+
+    # Solo puede verlo si está emitido
+    if cert.estado != "Emitido":
+        messages.error(request, "Tu certificado aún no ha sido emitido por el directorio.")
+        return redirect("mis_certificados")
+
+    # Aquí puedes mostrarlo como HTML o PDF (según tu implementación actual)
+    return render(request, "Certificados/ver_certificado.html", {"certificado": cert})
 
 # ---------------------------
 # NUEVA FUNCIÓN PARA DESCARGAR COMO PDF
 # ---------------------------
 
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
-from django.http import FileResponse
 import io
 import os
+from django.conf import settings
+from django.http import FileResponse
+from django.contrib import messages
+from django.shortcuts import redirect
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
+from .models import Certificado
 
 
 def descargar_certificado_pdf(request, folio):
@@ -93,61 +211,85 @@ def descargar_certificado_pdf(request, folio):
         messages.error(request, "Certificado no encontrado.")
         return redirect("home")
 
-    # Crear un buffer temporal en memoria
+    # Crear buffer de memoria
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
+    # Colores y tipografía base
+    color_texto = HexColor("#555555")
+    color_titulo = HexColor("#333333")
+    p.setFillColor(color_texto)
+
     # Margen superior
     y = height - 3 * cm
 
-    # Encabezado
+    # --- Encabezado ---
     p.setFont("Helvetica-Bold", 16)
+    p.setFillColor(color_titulo)
     p.drawCentredString(width / 2, y, "CERTIFICADO DE RESIDENCIA")
     y -= 1 * cm
 
     p.setFont("Helvetica", 12)
-    p.drawCentredString(width / 2, y, "JUNTA DE VECINOS MI JUNTA DIGITAL")
+    p.drawCentredString(width / 2, y, "JUNTA DE VECINOS LOS HIDALGOS")
     y -= 2 * cm
+    p.setFillColor(color_texto)
 
-    # Datos del certificado
+    # --- Datos del certificado ---
     p.setFont("Helvetica", 11)
-    p.drawString(3 * cm, y, f"Folio: {certificado.folio}")
-    y -= 1 * cm
-    p.drawString(3 * cm, y, f"Certifica que Don(ña): {vecino.nombre}")
+    p.drawRightString(width - 3 * cm, y, f"FOLIO: {certificado.folio}")
+    y -= 0.8 * cm
+
+    fecha = certificado.fecha_emision.strftime("%d DE %B, %Y").upper()
+    p.drawRightString(width - 3 * cm, y, f"BUIN, {fecha}")
+    y -= 1.2 * cm
+
+    p.drawString(3 * cm, y, f"CERTIFICA QUE DON(ÑA): {vecino.nombre}")
     y -= 1 * cm
     p.drawString(3 * cm, y, f"RUN: {vecino.run}")
     y -= 1 * cm
-    p.drawString(3 * cm, y, f"Domiciliado(a) en: {vecino.direccion}")
+    p.drawString(3 * cm, y, f"DOMICILIADO(A) EN: {vecino.direccion}")
     y -= 1 * cm
-    p.drawString(3 * cm, y, f"Fecha de emisión: {certificado.fecha_emision.strftime('%d/%m/%Y')}")
+    p.drawString(3 * cm, y, "SE EXTIENDE EL PRESENTE CERTIFICADO PARA SER PRESENTADO CON FINES")
+    y -= 0.6 * cm
+    p.drawString(3 * cm, y, "QUE ESTE ESTIME CONVENIENTE.")
     y -= 1 * cm
-    p.drawString(3 * cm, y, "Se extiende el presente certificado para ser presentado donde corresponda.")
-    y -= 2 * cm
+    p.drawString(3 * cm, y, "ESTE DOCUMENTO TIENE UNA VALIDEZ DE 30 DÍAS A CONTAR DE LA FECHA")
+    y -= 0.6 * cm
+    p.drawString(3 * cm, y, "DE EMISIÓN, PASADA LA FECHA NO HAY RESPONSABILIDAD DE QUIEN EMITE")
+    y -= 2.5 * cm
+    p.drawString(3 * cm, y, "EL CERTIFICADO.")
+    y -= 0.6 * cm
 
-    # Firmas
+    # --- Firmas ---
+    p.setFont("Helvetica", 11)
     p.drawString(3 * cm, y, "__________________________")
     p.drawString(3 * cm, y - 0.5 * cm, "SECRETARIO")
+
     p.drawString(width - 8 * cm, y, "__________________________")
     p.drawString(width - 8 * cm, y - 0.5 * cm, "PRESIDENTE")
+    y -= 3.5 * cm
 
-    y -= 3 * cm
-
-    # Texto legal
-    p.setFont("Helvetica-Oblique", 9)
-    p.drawCentredString(width / 2, y, "Este documento tiene una validez de 30 días a contar de la fecha de emisión.")
-
-    # Incluir el código QR si existe
+    # --- QR Code ---
     if certificado.qr_code:
         qr_path = certificado.qr_code.replace(settings.MEDIA_URL, '')
         qr_path = os.path.join(settings.MEDIA_ROOT, qr_path)
         if os.path.exists(qr_path):
-            p.drawInlineImage(qr_path, width / 2 - 2 * cm, 3 * cm, 4 * cm, 4 * cm)
+            qr_size = 4 * cm
+            p.drawInlineImage(qr_path, (width - qr_size) / 2, y - qr_size, qr_size, qr_size)
+            y -= qr_size + 1 * cm
 
-    # Guardar el PDF
+    # --- Texto final ---
+    p.setFont("Helvetica-Oblique", 9)
+    p.setFillColor(color_texto)
+    p.drawCentredString(width / 2, y, "Validez: 30 días desde la fecha de emisión.")
+    y -= 0.6 * cm
+    p.drawCentredString(width / 2, y, "Este documento acredita residencia del vecino dentro de la Junta Vecinal.")
+
+    # Guardar PDF
     p.showPage()
     p.save()
-
     buffer.seek(0)
+
     filename = f"{certificado.folio}.pdf"
     return FileResponse(buffer, as_attachment=True, filename=filename)
