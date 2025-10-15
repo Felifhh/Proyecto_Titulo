@@ -117,11 +117,16 @@ CREATE TABLE reserva (
 -- Tabla de Actividades
 CREATE TABLE actividad (
     id_actividad INT AUTO_INCREMENT PRIMARY KEY,
+    id_vecino INT NOT NULL,
     titulo VARCHAR(200) NOT NULL,
+    ubicacion VARCHAR(200) NOT NULL,
     descripcion TEXT,
     fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
     cupos INT,
-    estado ENUM('Activa','Finalizada','Cancelada') DEFAULT 'Activa'
+    estado ENUM('Activa','Finalizada','Cancelada') DEFAULT 'Activa',
+    FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
 );
 
 -- Relación inscripción a actividades
@@ -253,6 +258,37 @@ VALUES
 ('Parque Central', 'Área verde ideal para eventos al aire libre y actividades familiares.', 1500, 'espacios/Parque.jpeg', 'Activo', NOW()),
 ('Sede Vecinal', 'Espacio cerrado con sillas, mesas y cocina, ideal para reuniones comunitarias.', 2500, 'espacios/SedeVecinos.jpg', 'Activo', NOW()),
 ('Cancha Multiuso', 'Cancha techada para fútbol, básquetbol y vóleibol, con iluminación nocturna.', 2000, 'espacios/Cancha.png', 'Activo', NOW());
+
+
+
+-- === RESERVAS PARA MAÑANA ===
+INSERT INTO reserva (id_vecino, id_espacio, fecha, hora_inicio, hora_fin, estado, observacion, total)
+VALUES
+(4, 1, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '10:00', '12:00', 'Activa', 'Reserva matutina en el Parque Central', 3000),
+(5, 2, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '14:00', '16:00', 'Activa', 'Reunión en la Sede Vecinal', 5000),
+(3, 3, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '18:00', '20:00', 'Activa', 'Entrenamiento en Cancha Multiuso', 4000);
+
+
+
+-- === ACTIVIDADES ACTIVAS (vinculadas a las reservas de mañana) ===
+INSERT INTO actividad (id_vecino, titulo, ubicacion, descripcion, fecha, hora_inicio, hora_fin, cupos, estado)
+VALUES
+(4, 'Taller de Jardinería', 'Parque Central', 'Aprende sobre el cuidado de plantas y compostaje.', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '10:00', '12:00', 20, 'Activa'),
+(5, 'Reunión de Comité Vecinal', 'Sede Vecinal', 'Conversaremos los nuevos proyectos del barrio.', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '14:00', '16:00', 15, 'Activa'),
+(3, 'Campeonato de Baby Fútbol', 'Cancha Multiuso', 'Participa en un entretenido campeonato local.', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '18:00', '20:00', 30, 'Activa');
+
+
+-- === ACTIVIDAD FINALIZADA ===
+INSERT INTO actividad (id_vecino, titulo, ubicacion, descripcion, fecha, hora_inicio, hora_fin, cupos, estado)
+VALUES
+(2, 'Charla sobre Reciclaje', 'Sede Vecinal', 'Concientización sobre reciclaje y reducción de residuos.', DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:00', '13:00', 25, 'Finalizada');
+
+-- === ACTIVIDAD CANCELADA ===
+INSERT INTO actividad (id_vecino, titulo, ubicacion, descripcion, fecha, hora_inicio, hora_fin, cupos, estado)
+VALUES
+(1, 'Clase de Yoga', 'Parque Central', 'Sesión abierta de yoga para vecinos.', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '09:00', '10:00', 20, 'Cancelada');
+
+
 
 
 -- SELECT * FROM `vecino` LIMIT 1000

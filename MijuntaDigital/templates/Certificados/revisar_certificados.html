@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Revisión de Certificados{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h3 class="text-center mb-4 text-warning">
+    <i class="fa-solid fa-clipboard-check me-2"></i> Solicitudes de Certificados
+  </h3>
+
+  {% if certificados %}
+  <div class="table-responsive">
+    <table class="table table-dark table-striped align-middle text-center">
+      <thead>
+        <tr>
+          <th>Vecino</th>
+          <th>Tipo</th>
+          <th>Fecha Solicitud</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in certificados %}
+        <tr>
+          <td>{{ c.id_vecino.nombre }}</td>
+          <td>{{ c.tipo }}</td>
+          <td>{{ c.fecha_emision|date:"d/m/Y H:i" }}</td>
+          <td>
+            {% if c.estado == "Pendiente" %}
+              <span class="badge bg-warning text-dark">Pendiente</span>
+            {% elif c.estado == "Emitido" %}
+              <span class="badge bg-success">Emitido</span>
+            {% else %}
+              <span class="badge bg-danger">Rechazado</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.estado == "Pendiente" %}
+              <a href="{% url 'aprobar_certificado' c.id_certificado %}" class="btn btn-success btn-sm me-2">
+                <i class="fa-solid fa-check"></i>
+              </a>
+              <a href="{% url 'rechazar_certificado' c.id_certificado %}" class="btn btn-danger btn-sm">
+                <i class="fa-solid fa-xmark"></i>
+              </a>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center">No hay solicitudes registradas.</p>
+  {% endif %}
+</div>
+{% endblock %}

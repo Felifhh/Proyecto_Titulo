@@ -15,7 +15,15 @@ from Reserva.models import Reserva
 
 # Decorador personalizado (rol)
 from Usuarios.decorators import require_role
+import requests
 
+def notificar_n8n(evento, datos):
+    webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
+    try:
+        requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
+        print(f" Evento '{evento}' enviado correctamente a n8n.")
+    except Exception as e:
+        print(f" Error enviando evento a n8n: {e}")
 
 
 
@@ -99,7 +107,15 @@ def aprobar_vecino(request, pk):
     vecino = get_object_or_404(Vecino, pk=pk)
     vecino.estado = "Activo"
     vecino.save()
-    messages.success(request, f" {vecino.nombre} ha sido aprobado correctamente.")
+
+    #  Notificar a n8n
+    notificar_n8n("cuenta_aprobada", {
+        "nombre": vecino.nombre,
+        "correo": vecino.correo,
+        "run": vecino.run
+    })
+
+    messages.success(request, f"{vecino.nombre} ha sido aprobado correctamente.")
     return redirect("usuarios_pendientes")
 
 
@@ -113,7 +129,15 @@ def rechazar_vecino(request, pk):
     vecino = get_object_or_404(Vecino, pk=pk)
     vecino.estado = "Rechazado"
     vecino.save()
-    messages.warning(request, f" {vecino.nombre} ha sido rechazado.")
+
+    #  Notificar a n8n
+    notificar_n8n("cuenta_rechazada", {
+        "nombre": vecino.nombre,
+        "correo": vecino.correo,
+        "run": vecino.run
+    })
+
+    messages.warning(request, f"{vecino.nombre} ha sido rechazado.")
     return redirect("usuarios_pendientes")
 
 
@@ -239,6 +263,9 @@ def perfil_vecino(request, id_vecino):
         "reservas": reservas,
         "form_foto": form_foto,
     })
+
+
+
 
 
 # ==============================================

@@ -3,44 +3,47 @@
 
 {% block content %}
 <div class="container my-4">
+  <br>
   <div class="border border-dark p-4 shadow bg-white" style="max-width: 800px; margin: auto;">
-    <h3 class="text-center fw-bold">CERTIFICADO DE RESIDENCIA</h3>
-    <p class="text-center mb-4">JUNTA DE VECINOS LOS HIDALGOS</p>
+    <h3 class="text-center fw-bold text-muted">CERTIFICADO DE RESIDENCIA</h3>
+    <p class="text-center mb-4 text-muted">JUNTA DE VECINOS LOS HIDALGOS</p>
 
-    <p class="text-end">FOLIO: <strong>{{ certificado.folio }}</strong></p>
-    <p class="text-end">BUIN,  <strong>{{ certificado.fecha_emision|date:"d" }} DE {{ certificado.fecha_emision|date:"F"| upper }}, 20{{ certificado.fecha_emision|date:"y" }} </strong></p>
-    <p>CERTIFICA QUE DON(ÑA): <strong>{{ vecino.nombre }}</strong></p>
-    <p>RUN: <strong>{{ vecino.run }}</strong></p>
-    <p>DOMICILIADO(A) EN: <strong>{{ vecino.direccion }}</strong></p>
-    <p>SE EXTIENDE EL PRESENTE CERTIFICADO PARA SER PRESENTADO CON FINES QUE ESTE ESTIME CONVENIENTE</p>
-    <p>ESTE DOCUMENTO TIENE UNA VALIDEZ DE 30 DIAS A CONTAR DE LA FECHA DE EMISION, PASADA
+    <p class="text-end text-muted">FOLIO: <strong>{{ certificado.folio }}</strong></p>
+    <p class="text-end text-muted">BUIN,  <strong>{{ certificado.fecha_emision|date:"d" }} DE {{ certificado.fecha_emision|date:"F"| upper }}, 20{{ certificado.fecha_emision|date:"y" }} </strong></p>
+    <p class="text-muted">CERTIFICA QUE DON(ÑA): <strong>{{ vecino.nombre }}</strong></p>
+    <p class="text-muted">RUN: <strong>{{ vecino.run }}</strong></p>
+    <p class="text-muted">DOMICILIADO(A) EN: <strong>{{ vecino.direccion }}</strong></p>
+    <p class="text-muted">SE EXTIENDE EL PRESENTE CERTIFICADO PARA SER PRESENTADO CON FINES QUE ESTE ESTIME CONVENIENTE</p>
+    <p class="text-muted">ESTE DOCUMENTO TIENE UNA VALIDEZ DE 30 DIAS A CONTAR DE LA FECHA DE EMISION, PASADA
     LA FECHA NO HAY RESPONSABILIDAD DE QUIEN EMITE EL CERTIFCADO.</p>
 
     <br><br>
     <div class="row">
       <div class="col text-center">
-        <p>__________________________<br>SECRETARIO</p>
+        <p class="text-muted">__________________________<br>SECRETARIO</p>
       </div>
       <div class="col text-center">
-        <p>__________________________<br>PRESIDENTE</p>
+        <p class="text-muted">__________________________<br>PRESIDENTE</p>
       </div>
     </div>
 
     <br>
     <div class="text-center">
       <img src="{{ certificado.qr_code }}" alt="QR Certificado" class="img-fluid mt-3" style="max-width:150px;">
-      <p class="small mt-2">Validez: 30 días desde la fecha de emisión.</p>
+      <p class="small mt-2 text-muted">Validez: 30 días desde la fecha de emisión.</p>
     </div>
 
-    <p class="text-center small mt-3">
+    <p class="text-center small mt-3 text-muted">
       Este documento acredita residencia del vecino dentro de la Junta Vecinal.
     </p>
   </div>
+  <br>
 </div>
 <div class="text-center mt-4">
   <a href="{% url 'certificado_pdf' certificado.folio %}" class="btn btn-success">
     Descargar Certificado en PDF
   </a>
+  <br>
 </div>
 
 {% endblock %}
