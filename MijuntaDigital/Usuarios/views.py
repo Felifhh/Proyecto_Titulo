@@ -37,7 +37,7 @@ def registro_vecino(request):
     """
     Permite que un vecino se registre en el sistema.
     El registro queda en estado "Pendiente" hasta ser aprobado por el Presidente.
-    Ahora permite adjuntar un archivo de evidencia.
+    Muestra mensajes de validación personalizados según los validadores.
     """
     if request.method == "POST":
         form = RegistroVecinoForm(request.POST, request.FILES)
@@ -45,11 +45,17 @@ def registro_vecino(request):
             form.save()
             messages.success(
                 request,
-                " Registro enviado correctamente. Queda pendiente de validación por la directiva."
+                "Registro enviado correctamente. Queda pendiente de validación por la directiva."
             )
             return redirect('usuarios_registro_ok')
         else:
-            messages.error(request, " Verifica los datos ingresados. Hay errores en el formulario.")
+            # 🧠 Si hay errores específicos, mostrar cada uno
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
+            # Si no hay errores concretos (caso raro), mensaje genérico
+            if not form.errors:
+                messages.error(request, "Verifica los datos ingresados. Hay errores en el formulario.")
     else:
         form = RegistroVecinoForm()
 
@@ -65,6 +71,16 @@ def registro_ok(request):
 # ==============================================
 # VALIDACIÓN DE REGISTROS (solo directiva)
 # ==============================================
+
+@require_role(['presidente', 'secretario', 'tesorero'])
+def vista_directiva(request):
+    """
+    Muestra la página de gestión de la directiva.
+    Solo pueden acceder los roles:
+    Presidente, Secretario, Tesorero y Vecino.
+    Cualquier otro usuario será redirigido al home.
+    """
+    return render(request, "Usuarios/Directiva.html")
 
 
 def lista_pendientes(request):

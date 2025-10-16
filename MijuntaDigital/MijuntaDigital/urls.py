@@ -10,11 +10,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Página principal (puedes luego cambiar TemplateView por una vista real)
     path("", home, name="home"),
-    path(
-        "directiva/",
-        TemplateView.as_view(template_name="Directiva.html"),
-        name="Directiva",
-    ),
     # Rutas de tus apps
     path("usuarios/", include("Usuarios.urls")),
     path("certificados/", include("Certificados.urls")),
