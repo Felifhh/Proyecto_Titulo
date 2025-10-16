@@ -263,12 +263,34 @@ def descargar_certificado_pdf(request, folio):
 
     # --- Firmas ---
     p.setFont("Helvetica", 11)
-    p.drawString(3 * cm, y, "__________________________")
-    p.drawString(3 * cm, y - 0.5 * cm, "SECRETARIO")
 
-    p.drawString(width - 8 * cm, y, "__________________________")
-    p.drawString(width - 8 * cm, y - 0.5 * cm, "PRESIDENTE")
-    y -= 3.5 * cm
+    # Coordenadas base de las firmas
+    firma_y = y  # posición vertical común para ambas firmas
+    firma_secretario_x = 3 * cm
+    firma_presidente_x = width - 8 * cm
+
+    # Rutas absolutas de las imágenes de firmas
+    firma_secretario_path = os.path.join(settings.MEDIA_ROOT, "firmas", "firma_secretaria.jpg")
+    firma_presidente_path = os.path.join(settings.MEDIA_ROOT, "firmas", "firma_presidente.jpg")
+
+    # Tamaño estándar para las firmas (ajustable)
+    firma_width = 4 * cm
+    firma_height = 2 * cm
+
+    # Dibujar firmas si existen
+    if os.path.exists(firma_secretario_path):
+        p.drawInlineImage(firma_secretario_path, firma_secretario_x, firma_y, firma_width, firma_height)
+    if os.path.exists(firma_presidente_path):
+        p.drawInlineImage(firma_presidente_path, firma_presidente_x, firma_y, firma_width, firma_height)
+
+    # Texto bajo las firmas
+    p.setFont("Helvetica", 11)
+    p.drawCentredString(firma_secretario_x + (firma_width / 2), firma_y - 0.5 * cm, "SECRETARIO")
+    p.drawCentredString(firma_presidente_x + (firma_width / 2), firma_y - 0.5 * cm, "PRESIDENTE")
+
+    # Ajustar espacio inferior antes del QR
+    y = firma_y - 3.5 * cm
+
 
     # --- QR Code ---
     if certificado.qr_code:
