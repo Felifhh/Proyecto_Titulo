@@ -11,6 +11,7 @@ urlpatterns = [
     path('validacion/<int:pk>/rechazar/', views.rechazar_vecino, name='usuarios_rechazar'),
     path('perfil/<int:id_vecino>/', views.perfil_vecino, name='perfil_vecino'),
 
+    path('directiva/', views.vista_directiva, name='Directiva'),
 
     # Gestión (solo presidente)
     path("gestion/", views.gestion_usuarios, name="gestion_usuarios"),

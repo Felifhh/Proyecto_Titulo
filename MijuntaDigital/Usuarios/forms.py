@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
 from .models import Vecino, Rol
-from .validators import validar_dv, formatear_run, validar_contrasena  # Ajusta si tus validadores están en otro módulo
+from .validators import validar_dv, formatear_run, validar_contrasena  # Ajusta la ruta según tu proyecto
 
 class RegistroVecinoForm(forms.ModelForm):
     run = forms.CharField(label="RUN", max_length=15)
@@ -10,7 +10,6 @@ class RegistroVecinoForm(forms.ModelForm):
     correo = forms.EmailField(label="Correo electrónico", required=False)
     telefono = forms.CharField(label="Teléfono", max_length=20, required=False)
 
-    # Campos de contraseña
     contrasena = forms.CharField(
         label="Contraseña",
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -21,7 +20,6 @@ class RegistroVecinoForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
 
-    # Evidencia de residencia
     evidencia = forms.FileField(
         label="Evidencia de residencia (boleta, certificado, etc.)",
         required=False,
@@ -38,9 +36,32 @@ class RegistroVecinoForm(forms.ModelForm):
     # --- Validaciones personalizadas ---
     def clean_run(self):
         run = self.cleaned_data['run']
+
+        #  Validar dígito verificador
         if not validar_dv(run):
             raise forms.ValidationError("RUN inválido (verifica dígito verificador).")
-        return formatear_run(run)
+
+        #  Formatear RUN
+        run_formateado = formatear_run(run)
+
+        #  Verificar si ya existe en la base de datos
+        existente = Vecino.objects.filter(run=run_formateado).first()
+        if existente:
+            # Validar estado del usuario existente
+            if existente.estado == 'Pendiente':
+                raise forms.ValidationError(
+                    "Este RUN ya fue registrado y está pendiente de aprobación por la directiva."
+                )
+            elif existente.estado == 'Activo':
+                raise forms.ValidationError(
+                    "Este RUN ya se encuentra activo en el sistema."
+                )
+            elif existente.estado == 'Desactivado':
+                raise forms.ValidationError(
+                    "Este RUN fue desactivado. Contacte a su Junta Vecinal para su reactivación."
+                )
+
+        return run_formateado
 
     def clean_contrasena(self):
         contrasena = self.cleaned_data['contrasena']
@@ -73,13 +94,14 @@ class RegistroVecinoForm(forms.ModelForm):
         # Hashear contraseña
         obj.contrasena = make_password(self.cleaned_data['contrasena'])
 
-        #  Asignar imagen por defecto si no hay foto
+        # Asignar imagen por defecto si no hay foto
         if not obj.foto:
             obj.foto = 'perfiles/default.png'
 
         if commit:
             obj.save()
         return obj
+
 
 
 
