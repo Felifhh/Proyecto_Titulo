@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Espacio Comunal{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="p-4">
+    <h3 class="text-center text-primary mb-4">
+      <i class="fa-solid fa-pen-to-square me-2"></i>Editar Espacio Comunal
+    </h3>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label text-light">Nombre del Espacio</label>
+        {{ form.nombre }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label text-light">Descripción</label>
+        {{ form.descripcion }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label text-light">Monto por Hora</label>
+        {{ form.monto_hora }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label text-light">Imagen del Espacio</label><br>
+        {% if espacio.imagen %}
+          <img src="{{ espacio.imagen.url }}" class="rounded mb-2" width="150" height="100" style="object-fit: cover;">
+          <p class="text-muted small">Sube una nueva imagen si deseas reemplazarla.</p>
+        {% endif %}
+        {{ form.imagen }}
+      </div>
+
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i> Guardar Cambios
+        </button>
+        <a href="{% url 'gestionar_espacios' %}" class="btn btn-secondary ms-2">
+          <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

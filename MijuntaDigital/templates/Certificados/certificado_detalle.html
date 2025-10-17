@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Certificado de Residencia{% endblock %}
+
+{% block content %}
+  <!-- MENSAJES FLASH -->
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center" 
+         style="font-size: 0.95rem; border-radius: 10px;" 
+         role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"
+              style="filter: invert(1); opacity: 0.9;"></button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %} 
+
+<div class="container my-4">
+  <br>
+  <div class="border border-dark p-4 shadow bg-white" style="max-width: 800px; margin: auto;">
+    <h3 class="text-center fw-bold text-muted">CERTIFICADO DE RESIDENCIA</h3>
+    <p class="text-center mb-4 text-muted">JUNTA DE VECINOS LOS HIDALGOS</p>
+
+    <p class="text-end text-muted">FOLIO: <strong>{{ certificado.folio }}</strong></p>
+    <p class="text-end text-muted">BUIN,  <strong>{{ certificado.fecha_emision|date:"d" }} DE {{ certificado.fecha_emision|date:"F"| upper }}, 20{{ certificado.fecha_emision|date:"y" }} </strong></p>
+    <p class="text-muted">CERTIFICA QUE DON(ÑA): <strong>{{ vecino.nombre }}</strong></p>
+    <p class="text-muted">RUN: <strong>{{ vecino.run }}</strong></p>
+    <p class="text-muted">DOMICILIADO(A) EN: <strong>{{ vecino.direccion }}</strong></p>
+    <p class="text-muted">SE EXTIENDE EL PRESENTE CERTIFICADO PARA SER PRESENTADO CON FINES QUE ESTE ESTIME CONVENIENTE</p>
+    <p class="text-muted">ESTE DOCUMENTO TIENE UNA VALIDEZ DE 30 DIAS A CONTAR DE LA FECHA DE EMISION, PASADA
+    LA FECHA NO HAY RESPONSABILIDAD DE QUIEN EMITE EL CERTIFCADO.</p>
+
+    <br><br>
+<div class="row mt-4">
+  <div class="col text-center">
+    <img src="{% get_media_prefix %}firmas/firma_secretaria.jpg" alt="Firma Secretaria" class="img-fluid" style="max-height:80px;">
+    <p class="text-muted mt-1">SECRETARIO</p>
+  </div>
+  <div class="col text-center">
+    <img src="{% get_media_prefix %}firmas/firma_presidente.jpg" alt="Firma Presidente" class="img-fluid" style="max-height:80px;">
+    <p class="text-muted mt-1">PRESIDENTE</p>
+  </div>
+</div>
+
+    <br>
+    <div class="text-center">
+      <img src="{{ certificado.qr_code }}" alt="QR Certificado" class="img-fluid mt-3" style="max-width:150px;">
+      <p class="small mt-2 text-muted">Validez: 30 días desde la fecha de emisión.</p>
+    </div>
+
+    <p class="text-center small mt-3 text-muted">
+      Este documento acredita residencia del vecino dentro de la Junta Vecinal.
+    </p>
+  </div>
+  <br>
+</div>
+<div class="text-center mt-4">
+  <a href="{% url 'certificado_pdf' certificado.folio %}" class="btn btn-success">
+    Descargar Certificado en PDF
+  </a>
+  <br>
+</div>
+
+{% endblock %}

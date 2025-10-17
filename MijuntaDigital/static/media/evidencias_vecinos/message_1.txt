@@ -1,0 +1,76 @@
+Desarrollo Portal clientes
+
+
+Alcance (lo mínimo)
+
+Debe tener
+	•	Login con usuario/contraseña (hash Argon2), recuperación de contraseña, cierre de sesión.
+	•	Multi-tenant: cada usuario pertenece a un cliente (tenant) y solo ve sus datos.
+	•	Roles por tenant: Admin Cliente y Viewer.
+	•	Conectores a 2 fuentes externas (1 OAuth2 y 1 API Key) con estado (conectado/error/última sync).
+	•	Ingesta programada (Celery + Redis) con backoff y control de rate limit.
+	•	Dashboard con 5+ widgets: KPIs, serie temporal, tabla con filtros (fecha, dimensión).
+	•	Catálogo simple de métricas (definición, fórmula, origen) visible.
+	•	Exportación CSV de resultados y PNG de gráficos (cliente → toDataURL).
+	•	Alertas por umbral (email) por métrica.
+	•	Auditoría básica (logins, cambios de credenciales, exportes).
+	•	Medidor de frescura (“actualizado hace X min”).
+
+Pospuesto (si queda tiempo)
+	•	MFA (TOTP), SSO (OIDC/SAML), comparaciones YoY/MoM avanzadas, PDF, dashboards totalmente personalizables.
+
+⸻
+
+Stack en Azure (simple y mantenible)
+	•	App Service (Linux): Django + Gunicorn.
+	•	Azure Database for PostgreSQL – Flexible Server.
+	•	Azure Cache for Redis: cola de Celery y cache de consultas.
+	•	Azure Storage (Blob): exportes y archivos estáticos/media.
+	•	Azure Key Vault: secretos (API keys, OAuth client secrets).
+	•	Application Insights: métricas, logs y trazas.
+	•	(Opcional) Azure Communication Services o SendGrid para emails.
+
+⸻
+
+Módulos y funcionalidades (Django)
+	•	Auth: Django auth + Argon2 + políticas de contraseña + CSRF.
+(Hook listo para django-two-factor-auth si se habilita MFA luego).
+	•	Tenancy: modelo Tenant + Membership (user↔tenant↔role) + middleware que fija request.tenant. Todas las consultas filtran por tenant_id.
+	•	Conectores: app sources con tipos oauth2 y api_key, httpx para llamadas, refresh tokens, estado y reintentos.
+	•	Ingesta: celery beat programa jobs; workers consolidan, normalizan y guardan (idempotencia por external_id).
+	•	Dashboards: Django templates + Chart.js (CDN). Filtros por fecha/dimensión.
+	•	API interna (DRF) para alimentar widgets:
+GET /api/metrics?from&to&dims, GET /api/series/:metric_key, POST /api/alerts.
+	•	Alertas: reglas simples por umbral; envío email; ventana de silencio por métrica.
+	•	Auditoría: audit_log(actor, action, resource, ts, tenant_id).
+	•	Admin: Django Admin para alta/baja de tenants, usuarios y límites.
+
+⸻
+
+Modelo de datos mínimo
+	•	tenants(id, name, plan, settings jsonb)
+	•	users(id, email, password_hash, is_active, last_login)
+	•	memberships(user_id, tenant_id, role)  (índice compuesto)
+	•	data_sources(id, tenant_id, type, name, status, auth jsonb, last_sync_at)
+	•	metrics(id, tenant_id, key, name, definition, source_ids int[])
+	•	datapoints(metric_id, ts timestamptz, value numeric, dims jsonb) (TS en Postgres/Timescale opcional)
+	•	alerts(id, tenant_id, metric_id, rule jsonb, channel, is_active)
+	•	audit_log(id, tenant_id, actor_id, action, resource, ts)
+
+⸻
+
+Seguridad esencial (MVP)
+	•	TLS (App Service) + HSTS; cookies HttpOnly+Secure+SameSite.
+	•	CSP razonable (sin unsafe-inline), X-Frame-Options: DENY, X-Content-Type-Options.
+	•	Rate-limit por IP/usuario en login y exportes.
+	•	Secretos en Key Vault; rotación básica documentada.
+	•	Backups automáticos de Postgres + prueba de restauración.
+
+⸻
+
+Entregables
+	•	Código Django/DRF, Celery, jobs de ingesta, templates y assets.
+	•	Infra aprovisionada en Azure + pipeline CI/CD (GitHub Actions).
+	•	Catálogo de métricas inicial + 2 conectores operativos.
+	•	Manual de operación (runbook), credenciales en Key Vault, tableros de App Insights.
+	•	Suite de pruebas (unitarias y 2–3 flujos e2e críticos).

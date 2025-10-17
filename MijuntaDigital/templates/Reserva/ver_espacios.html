@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Espacios Comunales Disponibles{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-5 text-success fw-bold">
+    <i class="fa-solid fa-building me-2"></i>Espacios Comunales Disponibles
+  </h2>
+
+  <div class="row justify-content-center g-4">
+    {% for e in espacios %}
+    <div class="col-md-4 d-flex align-items-stretch">
+      <div class="card shadow-sm text-center w-100"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        
+        {% if e.imagen %}
+        <img src="{{ e.imagen.url }}" alt="{{ e.nombre }}" class="card-img-top"
+             style="height: 200px; object-fit: cover; border-bottom: 1px solid var(--color-border);">
+        {% else %}
+        <div class="p-5 bg-dark border-bottom" style="border-color: var(--color-border);">
+          <i class="fa-solid fa-door-open fa-3x text-success"></i>
+        </div>
+        {% endif %}
+
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title text-light">{{ e.nombre }}</h5>
+            <p class="small mb-3">{{ e.descripcion|truncatewords:20 }}</p>
+            <p><strong class="text-light">Valor por hora:</strong> ${{ e.monto_hora }}</p>
+          </div>
+
+          <a href="{% url 'reservar_desde_catalogo' e.id_espacio %}" class="btn btn-outline-success w-100 mt-3">
+            <i class="fa-solid fa-calendar-plus me-1"></i> Reservar
+          </a>
+
+<a href="{% url 'ver_disponibilidad' e.id_espacio %}" class="btn btn-outline-info w-100 mt-3">
+  <i class="fa-solid fa-calendar-check me-1"></i> Ver Disponibilidad
+</a>
+
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted">
+      <p>No hay espacios comunales disponibles en este momento.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(0, 255, 128, 0.25);
+  }
+
+  .card-title {
+    font-weight: 600;
+  }
+</style>
+{% endblock %}

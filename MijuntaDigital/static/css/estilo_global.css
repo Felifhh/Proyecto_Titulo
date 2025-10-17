@@ -1,0 +1,139 @@
+:root {
+  --color-bg: #0d1117;
+  --color-bg-secondary: #161b22;
+  --color-surface: #21262d;
+  --color-border: #30363d;
+  --color-text: #c9d1d9;
+  --color-text-muted: #8b949e;
+  --color-primary: #58a6ff;
+  --color-primary-hover: #1f6feb;
+  --color-success: #2ea043;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
+}
+
+/* === Fondo y texto general === */
+html, body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* === Encabezados === */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-primary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* === Texto general === */
+p, span, label, li, a {
+  color: var(--color-text);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* === Fondos secundarios (contenedores, secciones, etc.) === */
+section, main, .container, .content-box, .panel {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+/* === Navbar === */
+.navbar-dark {
+  background-color: var(--color-bg-secondary) !important;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-dark .navbar-brand {
+  color: var(--color-primary) !important;
+  font-weight: 600;
+}
+
+.navbar-dark .nav-link {
+  color: var(--color-text) !important;
+  transition: color 0.2s;
+}
+
+.navbar-dark .nav-link:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+/* === Formularios === */
+input, select, textarea {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 5px var(--color-primary-hover);
+}
+
+/* === Footer === */
+footer {
+  background-color: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 1rem 0;
+}
+
+footer a {
+  color: var(--color-primary);
+}
+
+footer a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* === Scrollbar personalizado === */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* === Transiciones suaves === */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* === Responsive ajustes mínimos === */
+@media (max-width: 768px) {
+  body {
+    font-size: 0.95rem;
+  }
+
+  h1, h2 {
+    font-size: 1.4rem;
+  }
+}
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);
+  }
+    .border-success {
+    border: 2px solid #28a745 !important;
+  }
+  .border-danger {
+    border: 2px solid #dc3545 !important;
+  }
+  .border-warning {
+    border: 2px solid #ffc107 !important;
+  }

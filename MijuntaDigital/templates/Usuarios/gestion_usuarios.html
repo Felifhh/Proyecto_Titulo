@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Gestión de Vecinos{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="card shadow p-4" style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0" style="color: var(--color-primary);">Gestión de Vecinos</h3>
+
+      <form method="get" class="d-flex">
+        <input type="text" name="buscar" value="{{ query }}" placeholder="Buscar por RUN..."
+               class="form-control form-control-sm me-2" style="min-width:200px;">
+        <button type="submit" class="btn btn-sm btn-outline-primary">Buscar</button>
+      </form>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Pestañas -->
+    <ul class="nav nav-tabs mb-3" id="vecinosTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="activos-tab" data-bs-toggle="tab" data-bs-target="#activos" type="button" role="tab">
+          Activos
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="desactivados-tab" data-bs-toggle="tab" data-bs-target="#desactivados" type="button" role="tab">
+          Desactivados
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rechazados-tab" data-bs-toggle="tab" data-bs-target="#rechazados" type="button" role="tab">
+          Rechazados
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="vecinosTabsContent">
+      <!-- TAB ACTIVOS -->
+      <div class="tab-pane fade show active" id="activos" role="tabpanel">
+        {% include "Usuarios/partials/_tabla_vecinos.html" with vecinos=activos roles=roles estado_tab="Activo" %}
+      </div>
+
+      <!-- TAB DESACTIVADOS -->
+      <div class="tab-pane fade" id="desactivados" role="tabpanel">
+        {% include "Usuarios/partials/_tabla_vecinos.html" with vecinos=desactivados roles=roles estado_tab="Desactivado" %}
+      </div>
+
+      <!-- TAB RECHAZADOS -->
+      <div class="tab-pane fade" id="rechazados" role="tabpanel">
+        {% include "Usuarios/partials/_tabla_vecinos.html" with vecinos=rechazados roles=roles estado_tab="Rechazado" %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

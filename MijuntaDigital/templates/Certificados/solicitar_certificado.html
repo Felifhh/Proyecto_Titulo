@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Solicitar Certificado de Residencia{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h3 class="text-center text-info mb-4">
+    <i class="fa-solid fa-file-circle-check me-2"></i> Solicitud de Certificado de Residencia
+  </h3>
+
+  <div class="alert alert-warning text-center mb-4 shadow-sm">
+    <i class="fa-solid fa-circle-info me-2"></i>
+    El costo del certificado es de <strong>$1.500</strong>. 
+    Se cobrará automáticamente al enviar la solicitud.
+  </div>
+
+  <form method="POST" class="mx-auto shadow-sm p-4 bg-white rounded" style="max-width: 600px;">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="motivo" class="form-label text-muted">Motivo de la solicitud (opcional)</label>
+      <textarea name="motivo" id="motivo" rows="3" class="form-control"></textarea>
+    </div>
+    <button type="submit" class="btn btn-success w-100">
+      <i class="fa-solid fa-credit-card me-1"></i> Pagar y enviar solicitud
+    </button>
+  </form>
+
+  <div class="text-center mt-4">
+    <a href="{% url 'mis_certificados' %}" class="btn btn-outline-secondary">
+      <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+  </div>
+</div>
+{% endblock %}
+

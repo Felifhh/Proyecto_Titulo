@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Gestión de Actividades{% endblock %}
+
+{% block content %}
+  <!-- MENSAJES FLASH -->
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center" 
+         style="font-size: 0.95rem; border-radius: 10px;" 
+         role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"
+              style="filter: invert(1); opacity: 0.9;"></button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="container mt-4">
+  <!-- Título y botón -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-light"><i class="fa-solid fa-calendar-days me-2"></i>Gestión de Actividades</h2>
+    {% if request.session.vecino_id %}
+      <a href="{% url 'crear_actividad' %}" class="btn btn-success">
+        <i class="fa-solid fa-plus me-1"></i> Nueva Actividad
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Buscador -->
+  <form method="get" class="d-flex justify-content-end mb-3">
+    <input
+      type="text"
+      name="q"
+      class="form-control w-25 me-2"
+      placeholder="Buscar por título o ubicación..."
+      value="{{ request.GET.q }}"
+    >
+    <button type="submit" class="btn btn-outline-primary">Buscar</button>
+  </form>
+
+  <!-- Tabs de estado -->
+  <ul class="nav nav-tabs mb-3" id="actividadTabs">
+    <li class="nav-item">
+      <a class="nav-link {% if estado_actual == 'Activa' %}active{% endif %}" href="?estado=Activa">Activas</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if estado_actual == 'Finalizada' %}active{% endif %}" href="?estado=Finalizada">Finalizadas</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if estado_actual == 'Cancelada' %}active{% endif %}" href="?estado=Cancelada">Canceladas</a>
+    </li>
+  </ul>
+
+  <!-- Lista de actividades -->
+  {% if actividades %}
+    <div class="row">
+      {% for act in actividades %}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <div>
+                <h5 class="card-title text-info mb-1">{{ act.titulo }}</h5>
+                <p class="text-muted small mb-2">{{ act.descripcion|truncatewords:15 }}</p>
+                <ul class="list-unstyled small mb-2">
+                  <li><i class="fa-solid fa-location-dot me-1 text-warning"></i> {{ act.ubicacion }}</li>
+                  <li><i class="fa-regular fa-calendar me-1"></i> {{ act.fecha|date:"d/m/Y" }}</li>
+                  <li><i class="fa-regular fa-clock me-1"></i> {{ act.hora_inicio }} - {{ act.hora_fin }}</li>
+                  <li><i class="fa-solid fa-user-group me-1"></i> Cupos: {{ act.inscritos }} / {{ act.cupos|default:"∞" }}</li>
+                </ul>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <span class="badge bg-{{ act.estado|lower }}">{{ act.estado }}</span>
+                <a href="{% url 'detalle_actividad' act.id_actividad %}" class="btn btn-outline-info btn-sm">
+                  <i class="fa-solid fa-eye"></i> Ver
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-warning text-center mt-3">
+      No hay actividades {{ estado_actual|default:"registradas" }}.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+

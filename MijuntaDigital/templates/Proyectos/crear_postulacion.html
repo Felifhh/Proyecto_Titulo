@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="card shadow-lg p-4 bg-dark text-light mt-4">
+  <h2 class="text-center mb-4">Nueva Postulación de Proyecto Vecinal</h2>
+
+  <form method="POST" enctype="multipart/form-data" class="form-proyecto">
+    {% csrf_token %}
+
+    <!-- Campo título -->
+    <div class="form-group mb-3">
+      <label for="id_titulo" class="form-label">Título</label>
+      {{ form.titulo }}
+    </div>
+
+    <!-- Campo descripción -->
+    <div class="form-group mb-3">
+      <label for="id_descripcion" class="form-label">Descripción</label>
+      {{ form.descripcion }}
+    </div>
+
+    <!-- Campo presupuesto -->
+    <div class="form-group mb-4">
+      <label for="id_presupuesto" class="form-label">Presupuesto estimado</label>
+      {{ form.presupuesto }}
+    </div>
+
+    <!-- Subir imagen -->
+    <div class="form-group text-center">
+      <label class="form-label d-block mb-2">📷 Imagen de referencia</label>
+
+      <!-- Vista previa -->
+      <div class="preview-container mb-3">
+        <img id="preview-img" src="{% static 'img/no_image.png' %}" alt="Vista previa"
+             class="img-thumbnail" style="max-width: 250px; display: none;">
+      </div>
+
+      <!-- Botón personalizado -->
+      <label for="id_documento_adj" class="btn btn-outline-light">
+        <i class="fas fa-upload"></i> Seleccionar imagen
+      </label>
+
+      <!-- Input real -->
+      {{ form.documento_adj }}
+
+      <!-- Nombre del archivo -->
+      <p id="nombre-archivo" class="mt-2 text-muted">Ningún archivo seleccionado</p>
+    </div>
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-success px-4 py-2">
+        <i class="fas fa-paper-plane"></i> Enviar postulación
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Script: vista previa y nombre del archivo -->
+<script>
+  const input = document.getElementById('id_documento_adj');
+  const labelNombre = document.getElementById('nombre-archivo');
+  const previewImg = document.getElementById('preview-img');
+
+  input.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+      labelNombre.textContent = file.name;
+
+      // Mostrar vista previa
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      labelNombre.textContent = "Ningún archivo seleccionado";
+      previewImg.style.display = 'none';
+    }
+  });
+</script>
+
+{% endblock %}
+
+
+

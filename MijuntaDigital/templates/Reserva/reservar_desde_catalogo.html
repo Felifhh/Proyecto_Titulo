@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reserva de {{ espacio.nombre }}{% endblock %}
+
+{% block content %}
+  <!-- MENSAJES FLASH -->
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center" 
+         style="font-size: 0.95rem; border-radius: 10px;" 
+         role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"
+              style="filter: invert(1); opacity: 0.9;"></button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="container py-5">
+  <div class="card shadow-sm mx-auto"
+       style="max-width: 600px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+    {% if espacio.imagen %}
+    <img src="{{ espacio.imagen.url }}" class="card-img-top"
+         style="height: 220px; object-fit: cover; border-bottom: 1px solid var(--color-border);">
+    {% endif %}
+
+    <div class="card-body text-white">
+      <h4 class="text-success mb-3">
+        <i></i>Reservar: {{ espacio.nombre }}
+      </h4>
+
+      <p><strong>Valor por hora:</strong> ${{ espacio.monto_hora }}</p>
+
+      <hr class="border-secondary">
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="alert alert-info mt-3">
+          <strong>Monto estimado:</strong> <span id="monto-total">—</span>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 mt-3">
+          <i class="fa-solid fa-paper-plane me-1"></i> Enviar Reserva
+        </button>
+      </form>
+
+      <!-- Pasamos el monto del espacio al script -->
+      <script id="monto-hora-data" type="application/json">
+        {{ espacio.monto_hora|floatformat:0 }}
+      </script>
+    </div>
+  </div>
+</div>
+
+<style>
+  input, select, textarea {
+    background-color: var(--color-bg);
+    color: white;
+    border: 1px solid var(--color-border);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--bs-success);
+    box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
+  }
+
+  .alert-info {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #9cd2ff;
+    border: 1px solid #0dcaf0;
+  }
+</style>
+
+<!-- Reutilizamos el script global de cálculo de monto -->
+<script src="{% static 'js/mostrar_monto_catalogo.js' %}"></script>
+{% endblock %}

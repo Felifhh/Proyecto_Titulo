@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultado del Pago</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+
+  <div class="card shadow-lg p-4" style="max-width: 600px; width: 100%;">
+    <div class="card-body text-center">
+      
+      {% if response.status == "AUTHORIZED" %}
+        <h2 class="text-success mb-3">Pago Autorizado</h2>
+        <p class="text-muted">Tu pago ha sido procesado exitosamente. La solicitud ha sido enviada al directorio.</p>
+      {% else %}
+        <h2 class="text-danger mb-3">Pago Rechazado</h2>
+        <p class="text-muted">El pago no pudo ser autorizado. Intenta nuevamente o regresa al inicio.</p>
+      {% endif %}
+
+      <hr>
+
+      <div class="text-start small">
+        <p><strong>Orden de compra:</strong> {{ response.buy_order }}</p>
+        <p><strong>Monto:</strong> ${{ response.amount }}</p>
+        <p><strong>Estado del pago:</strong> {{ response.status }}</p>
+        <p><strong>Fecha transacción:</strong> {{ response.transaction_date }}</p>
+      </div>
+
+      {% if certificado %}
+        <hr>
+        <div class="alert alert-success text-start small shadow-sm">
+          <p class="mb-1"><strong>Certificado generado:</strong> {{ certificado.tipo }}</p>
+          <p class="mb-0"><strong>Estado actual:</strong> {{ certificado.estado }}</p>
+        </div>
+        <a href="{% url 'mis_certificados' %}" class="btn btn-primary mt-3">
+          <i class="fa-solid fa-folder-open me-1"></i> Ver mis certificados
+        </a>
+      {% else %}
+        <a href="{% url 'home' %}" class="btn btn-outline-danger mt-3">
+          <i class="fa-solid fa-rotate-left me-1"></i> Volver al inicio
+        </a>
+      {% endif %}
+
+      {% if reserva %}
+        <hr>
+        <div class="alert alert-success text-start small shadow-sm">
+          <p><strong>Espacio:</strong> {{ reserva.id_espacio.nombre }}</p>
+          <p><strong>Fecha:</strong> {{ reserva.fecha }}</p>
+          <p><strong>Horario:</strong> {{ reserva.hora_inicio }} a {{ reserva.hora_fin }}</p>
+          <p><strong>Estado:</strong> {{ reserva.estado }}</p>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          <a href="{% url 'mis_reservas' %}" class="btn btn-primary">
+            <i class="fa-solid fa-calendar-check me-1"></i> Ver mis reservas
+          </a>
+          <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-house me-1"></i> Volver al inicio
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</body>
+</html>
+
