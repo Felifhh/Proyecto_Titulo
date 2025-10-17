@@ -109,7 +109,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'junta_vecinal',
-        'USER': 'django_user',
+        'USER': 'root',
         'PASSWORD': 'junta123',
         'HOST': 'localhost',
         'PORT': '3306',

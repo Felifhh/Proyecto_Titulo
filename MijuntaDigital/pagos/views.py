@@ -21,7 +21,7 @@ tx.configure_for_testing()
 
 
 def iniciar_pago(request):
-    buy_order = "ORD-" + str(12345)
+    buy_order = "ORD-" + str(123456)
     session_id = "SES-" + str(request.session.session_key)
     amount = 1000
     return_url = request.build_absolute_uri("/pagos/retorno/")
