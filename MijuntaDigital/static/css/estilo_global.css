@@ -137,3 +137,20 @@ footer a:hover {
   .border-warning {
     border: 2px solid #ffc107 !important;
   }
+
+  /* Fondo oscuro para el dropdown de notificaciones */
+.dropdown-menu.bg-dark {
+  background-color: #1e1e1e !important;
+  color: #f8f9fa !important;
+}
+
+/* Color del texto */
+.dropdown-menu.bg-dark .dropdown-item {
+  color: #f8f9fa !important;
+}
+
+/* Hover bonito */
+.dropdown-menu.bg-dark .dropdown-item:hover {
+  background-color: #343a40 !important;
+  color: #00b4d8 !important;
+}

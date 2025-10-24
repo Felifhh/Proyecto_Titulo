@@ -73,41 +73,36 @@
 <!-- Noticias -->
 <section class="py-5" style="border: 0cap;">
   <div class="container" style="border: 0cap;">
-    <br>
     <h2 class="text-center mb-4 text-primary">Noticias y Comunicados</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <img src="{% static 'img/noticia1.jpg' %}" class="card-img-top" alt="Noticia 1">
-          <div class="card-body">
-            <h5 class="card-title">Nueva luminaria en la plaza</h5>
-            <p class="card-text">El municipio instaló nuevas luces LED en la plaza central para mayor seguridad.</p>
-            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
+
+    <div class="row g-4 justify-content-center">
+      {% if noticias_recientes %}
+        {% for n in noticias_recientes %}
+        <div class="col-md-4 col-sm-6">
+          <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <div>
+                <h5 class="card-title text-info">{{ n.titulo }}</h5>
+                <p class="card-text small">{{ n.contenido|truncatewords:20 }}</p>
+              </div>
+              <a href="{% url 'detalle_noticia' n.id_noticia %}" class="btn btn-outline-primary btn-sm mt-2">
+                <i class="fa-solid fa-eye me-1"></i> Leer más
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <img src="{% static 'img/noticia2.jpg' %}" class="card-img-top" alt="Noticia 2">
-          <div class="card-body">
-            <h5 class="card-title">Campaña de reciclaje</h5>
-            <p class="card-text">Participa en la jornada de reciclaje este sábado a las 10:00 hrs en la sede vecinal.
-            </p>
-            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
-          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center">
+          <p class="text-muted">No hay noticias publicadas aún.</p>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <img src="{% static 'img/noticia3.jpg' %}" class="card-img-top" alt="Noticia 3">
-          <div class="card-body">
-            <h5 class="card-title">Nueva cancha techada</h5>
-            <p class="card-text">Gracias a la gestión vecinal, se aprobó la construcción de una cancha multiuso techada.
-            </p>
-            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
-          </div>
-        </div>
-      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-5 text-center">
+      <a href="{% url 'lista_noticias' %}" class="btn btn-outline-primary px-4">
+        <i class="fa-solid fa-list me-1"></i> Ver todas las noticias
+      </a>
     </div>
   </div>
 </section>

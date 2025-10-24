@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'Documentos',
     'Auditoria',
     'pagos',
+    'Notificaciones',
 
     # Utilidad
     'widget_tweaks',
@@ -95,6 +96,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'Notificaciones.context_processors.notificaciones_context',
             ],
         },
     },
@@ -105,6 +107,7 @@ WSGI_APPLICATION = 'MijuntaDigital.wsgi.application'
 # =========================================
 # BASE DE DATOS
 # =========================================
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -115,6 +118,7 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
 
 # =========================================
 # VALIDADORES DE CONTRASEÑA

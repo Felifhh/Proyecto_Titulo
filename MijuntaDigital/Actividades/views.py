@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count, Q
 from datetime import date
+
+from Noticia.models import Noticia
 from .models import Actividad, InscripcionActividad
 from .forms import ActividadForm
 from Usuarios.models import Vecino
@@ -180,10 +182,24 @@ def finalizar_actividad(request, id_actividad):
 
 
 def home(request):
+    """
+    Página principal que muestra noticias y actividades recientes.
+    """
+    # Últimas 3 noticias publicadas
+    noticias_recientes = (
+        Noticia.objects
+        .all()
+        .order_by("-fecha_publicacion")[:3]
+    )
+
     actividades_recientes = (
         Actividad.objects
         .filter(estado__iexact="Activa")  
         .annotate(inscritos=Count("inscripciones"))
         .order_by("-id_actividad")[:3]
     )
-    return render(request, "home.html", {"actividades_recientes": actividades_recientes})
+    return render(request, "home.html", {
+        "noticias_recientes": noticias_recientes,
+        "actividades_recientes": actividades_recientes,
+    })
+
