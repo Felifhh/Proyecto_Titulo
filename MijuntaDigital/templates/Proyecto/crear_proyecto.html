@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Crear Proyecto Vecinal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-light mb-4"><i class="fa-solid fa-file-signature me-2 text-success"></i> Postular Nuevo Proyecto</h2>
+
+  <form method="post" enctype="multipart/form-data"
+    class="bg-dark text-light p-4 rounded shadow-sm border border-secondary">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="titulo" class="form-label text-info fw-semibold">Título del Proyecto</label>
+      <input type="text" name="titulo" id="titulo" class="form-control bg-dark text-light border-secondary" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="descripcion" class="form-label text-info fw-semibold">Descripción</label>
+      <textarea name="descripcion" id="descripcion" rows="4" class="form-control bg-dark text-light border-secondary"
+        placeholder="Describe el objetivo del proyecto..." required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="presupuesto" class="form-label text-info fw-semibold">Presupuesto estimado (CLP)</label>
+      <input type="number" name="presupuesto" id="presupuesto" class="form-control bg-dark text-light border-secondary"
+        min="0" step="1000">
+    </div>
+
+    <div class="mb-3">
+      <label for="documento_adj" class="form-label text-info fw-semibold">Documento de respaldo (PDF o imagen)</label>
+      <input type="file" name="documento_adj" id="documento_adj"
+        class="form-control bg-dark text-light border-secondary">
+    </div>
+
+    <div class="text-end mt-4">
+      <button type="submit" class="btn btn-success px-4">
+        <i class="fa-solid fa-paper-plane me-1"></i> Enviar Proyecto
+      </button>
+      <a href="{% url 'mis_proyectos' %}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

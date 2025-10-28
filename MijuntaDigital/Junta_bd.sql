@@ -18,6 +18,9 @@ DROP TABLE IF EXISTS solicitud;
 DROP TABLE IF EXISTS auditoria;
 DROP TABLE IF EXISTS documento;
 DROP TABLE IF EXISTS metricas;
+DROP TABLE IF EXISTS notificaciones_notificacion;
+DROP TABLE IF EXISTS notificaciones_notificacionusuario;
+DROP TABLE IF EXISTS voto_proyecto;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -69,21 +72,54 @@ CREATE TABLE proyecto (
     id_vecino INT NOT NULL,
     titulo VARCHAR(200) NOT NULL,
     descripcion TEXT,
-    presupuesto DECIMAL(12,2),
+    presupuesto INT,
     documento_adj VARCHAR(255),
     fecha_postulacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    estado ENUM('En Revisión','Aprobado','Rechazado') DEFAULT 'En Revisión',
+
+    -- Estado administrativo (Directiva)
+    estado ENUM(
+        'En Revisión',
+        'En Votación',
+        'Rechazado',
+        'Finalizado'
+    ) DEFAULT 'En Revisión',
+
+    -- Estado ciudadano (Comunidad)
+    estado_votacion ENUM(
+        'En Espera de Votación',
+        'Aprobado por Votación',
+        'Rechazado por Votación'
+    ) DEFAULT 'En Espera de Votación',
+
     FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
 );
+
+ALTER TABLE proyecto
+ADD COLUMN fecha_inicio_votacion DATETIME NULL,
+ADD COLUMN fecha_fin_votacion DATETIME NULL;
+
+CREATE TABLE voto_proyecto (
+    id_voto INT AUTO_INCREMENT PRIMARY KEY,
+    id_proyecto INT NOT NULL,
+    id_vecino INT NOT NULL,
+    voto BOOLEAN NOT NULL, -- TRUE = A favor, FALSE = En contra
+    fecha_voto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (id_proyecto, id_vecino),
+    FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto),
+    FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
+);
+
 
 -- Tabla de Noticias
 CREATE TABLE noticia (
     id_noticia INT AUTO_INCREMENT PRIMARY KEY,
-    id_autor INT NOT NULL,
+    id_vecino INT NOT NULL,
     titulo VARCHAR(200) NOT NULL,
     contenido TEXT,
     fecha_publicacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_autor) REFERENCES vecino(id_vecino)
+    imagen VARCHAR(255) NULL,
+	 link VARCHAR(300) NULL,
+    FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
 );
 
 -- Tabla de Espacios comunales
@@ -178,6 +214,31 @@ CREATE TABLE metricas (
     valor DECIMAL(12,2),
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE notificaciones_notificacion (
+    id_notificacion INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    mensaje TEXT NOT NULL,
+    tipo ENUM('global', 'directorio') DEFAULT 'global',
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=UTF8MB4_GENERAL_CI;
+
+CREATE TABLE notificaciones_notificacionusuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    notificacion_id INT NOT NULL,
+    id_vecino INT NOT NULL,
+    leida BOOLEAN DEFAULT FALSE,
+    fecha_estado DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `unique_notificacion_vecino` (`notificacion_id`, `id_vecino`),
+    CONSTRAINT `fk_notificacion_usuario` FOREIGN KEY (`notificacion_id`)
+    REFERENCES `notificaciones_notificacion` (`id_notificacion`)
+    ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO notificaciones_notificacion (titulo, mensaje, tipo)
+VALUES ('Bienvenido a MiJuntaDigital', 'Sistema de notificaciones activado correctamente.', 'global');
+
+
 
 
 INSERT INTO rol VALUES (1,"vecino");
@@ -288,7 +349,41 @@ INSERT INTO actividad (id_vecino, titulo, ubicacion, descripcion, fecha, hora_in
 VALUES
 (1, 'Clase de Yoga', 'Parque Central', 'Sesión abierta de yoga para vecinos.', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '09:00', '10:00', 20, 'Cancelada');
 
+INSERT INTO noticia (id_vecino, titulo, contenido, link, imagen, fecha_publicacion)
+VALUES
+-- 🏡 Noticia 1: Jornada comunitaria
+(1,
+ 'Jornada de Limpieza en la Plaza Los Hidalgos',
+ 'Este sábado invitamos a todos los vecinos a participar en la jornada de limpieza y hermoseamiento de la plaza central. Se recomienda traer guantes y herramientas de jardinería. Al finalizar compartiremos un coffee break comunitario.',
+ 'https://www.municipalidad.cl/programas-verdes',
+ 'noticias/Noticia_1.png',
+ NOW()),
+
+-- 💡 Noticia 2: Nueva iluminación en pasajes
+(2,
+ 'Instalación de nuevas luminarias LED en la Villa Los Olivos',
+ 'Durante esta semana se llevará a cabo la instalación de luminarias LED en los pasajes Las Acacias y Los Canelos. Este proyecto busca mejorar la seguridad y reducir el consumo eléctrico de nuestra comunidad.',
+ 'https://www.minenergia.cl/eficiencia-energetica',
+ 'noticias/Noticia_2.png',
+ NOW()),
+
+-- 🎉 Noticia 3: Celebración de aniversario
+(3,
+ 'Celebración del 10° Aniversario de la Junta de Vecinos Los Hidalgos',
+ 'Queremos invitar a todos los vecinos a la gran celebración del décimo aniversario de nuestra Junta de Vecinos. Habrá música en vivo, juegos para niños y feria de emprendimientos locales. ¡No faltes!',
+ 'https://www.juntasdevecinos.cl/actividades',
+ 'noticias/Noticia_3.png',
+ NOW()),
+
+-- 🛠️ Noticia 4: Postulación a fondo vecinal
+(1,
+ 'Abierta la postulación al Fondo de Mejoramiento Vecinal 2025',
+ 'El municipio ha abierto el proceso de postulación al Fondo de Mejoramiento Vecinal, que financia proyectos como mejoramiento de áreas verdes, señalización y equipamiento comunitario. La Junta apoyará la formulación de proyectos.',
+ 'https://www.municipalidad.cl/fondo-vecinal-2025',
+ 'noticias/Noticia_4.png',
+ NOW());
 
 
 
 -- SELECT * FROM `vecino` LIMIT 1000
+-- SELECT * FROM `reserva` LIMIT 1000

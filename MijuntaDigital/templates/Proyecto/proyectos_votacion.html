@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Proyectos en Votación{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4 text-success fw-bold">
+    <i class="fa-solid fa-check-to-slot me-2"></i>Proyectos en Votación
+  </h2>
+
+  <div class="row g-4 justify-content-center">
+    {% for p in proyectos %}
+    <div class="col-md-5">
+      <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="text-info">{{ p.titulo }}</h5>
+            <p>{{ p.descripcion|truncatewords:20 }}</p>
+            <p><i class="fa-solid fa-calendar me-1 text-warning"></i>Finaliza: {{ p.fecha_fin_votacion|date:"d/m/Y" }}
+            </p>
+          </div>
+          <a href="{% url 'detalle_proyecto' p.id_proyecto %}" class="btn btn-outline-success mt-3">
+            <i class="fa-solid fa-eye me-1"></i> Ver Detalle / Votar
+          </a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center">No hay proyectos en votación actualmente.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
