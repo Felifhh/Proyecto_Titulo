@@ -1,22 +1,33 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from Usuarios.models import Vecino
 
 
 class Solicitud(models.Model):
-    id_solicitud = models.AutoField(primary_key=True)
-    id_vecino = models.ForeignKey('Usuarios.Vecino', models.DO_NOTHING, db_column='id_vecino')
-    tipo = models.CharField(max_length=10, blank=True, null=True)
-    descripcion = models.TextField(blank=True, null=True)
-    estado = models.CharField(max_length=10, blank=True, null=True)
-    fecha_creacion = models.DateTimeField(blank=True, null=True)
+    TIPOS = [
+        ('Mantención', 'Mantención'),
+        ('Luminarias', 'Luminarias'),
+        ('Aseo', 'Aseo'),
+        ('Otro', 'Otro'),
+    ]
 
+    ESTADOS = [
+        ('Pendiente', 'Pendiente'),
+        ('En Proceso', 'En Proceso'),
+        ('Resuelta', 'Resuelta'),
+        ('Rechazada', 'Rechazada'),
+    ]
+
+    id_solicitud = models.AutoField(primary_key=True)
+    id_vecino = models.ForeignKey(Vecino, on_delete=models.CASCADE, db_column='id_vecino')
+    tipo = models.CharField(max_length=20, choices=TIPOS, default='Otro')
+    descripcion = models.TextField(blank=True, null=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='Pendiente')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
         db_table = 'solicitud'
+        verbose_name = 'Solicitud Ciudadana'
+        verbose_name_plural = 'Solicitudes Ciudadanas'
+
+    def __str__(self):
+        return f"{self.tipo} - {self.estado} ({self.id_vecino.nombre})"

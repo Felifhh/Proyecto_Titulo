@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Documentos Institucionales{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center text-primary fw-bold mb-4">
+    <i class="fa-solid fa-file-lines me-2"></i> Documentos Institucionales
+  </h2>
+
+  <div class="text-end mb-4">
+    <a href="{% url 'subir_documento' %}" class="btn btn-success">
+      <i class="fa-solid fa-upload me-1"></i> Subir Documento
+    </a>
+  </div>
+
+  {% if documentos %}
+  <div class="row g-4">
+    {% for d in documentos %}
+    <div class="col-md-6">
+      <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="text-info">{{ d.titulo }}</h5>
+          <p><strong>Tipo:</strong> {{ d.tipo }}</p>
+          <p class="small text-muted"><i class="fa-regular fa-calendar"></i> {{ d.fecha_subida|date:"d/m/Y H:i" }}</p>
+          <a href="{% url 'detalle_documento' d.id_documento %}" class="btn btn-outline-primary btn-sm mt-2">
+            <i class="fa-solid fa-eye me-1"></i> Ver Detalle
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-warning text-center">No hay documentos registrados.</div>
+  {% endif %}
+</div>
+{% endblock %}

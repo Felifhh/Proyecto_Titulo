@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Subir Documento{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-primary mb-4"><i class="fa-solid fa-upload me-2"></i>Subir Documento</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="bg-dark text-light p-4 rounded shadow-sm">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_titulo" class="form-label">Título</label>
+            {{ form.titulo }}
+        </div>
+        <div class="mb-3">
+            <label for="id_tipo" class="form-label">Tipo</label>
+            {{ form.tipo }}
+        </div>
+        <div class="mb-3">
+            <label for="id_archivo" class="form-label">Archivo</label>
+            {{ form.archivo }}
+        </div>
+
+        <button type="submit" class="btn btn-success mt-3">
+            <i class="fa-solid fa-check me-1"></i> Subir Documento
+        </button>
+    </form>
+</div>
+{% endblock %}

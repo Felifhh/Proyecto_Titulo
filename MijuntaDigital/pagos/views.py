@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from transbank.webpay.webpay_plus.transaction import Transaction
 from Reserva.models import Reserva, EspacioComunal
-
+from Auditoria.utils import registrar_evento
 from Usuarios.models import Vecino
 import requests
 
@@ -96,6 +96,10 @@ def retorno_pago_certificado(request):
     
 
 
+
+# ==============================================
+# RETORNO DE PAGO WEBPAY
+# ==============================================
 def retorno_pago_reserva(request):
     token = request.GET.get("token_ws")
     tx = Transaction()
@@ -104,14 +108,16 @@ def retorno_pago_reserva(request):
     pago_data = request.session.get("reserva_pago")
 
     if not pago_data:
+        registrar_evento(request, "Error en retorno de pago Webpay: sin datos de reserva", "Error")
         messages.error(request, "No se encontró información de la reserva en sesión.")
         return redirect("home")
 
-    if response.get("status") == "AUTHORIZED":
+    status = response.get("status")
+
+    if status == "AUTHORIZED":
         vecino = get_object_or_404(Vecino, pk=pago_data["vecino_id"])
         espacio = get_object_or_404(EspacioComunal, pk=pago_data["espacio_id"])
 
-        # Crear la reserva
         reserva = Reserva.objects.create(
             id_vecino=vecino,
             id_espacio=espacio,
@@ -122,29 +128,12 @@ def retorno_pago_reserva(request):
             total=pago_data["total"],
         )
 
-        # Notificar al n8n (como en tu función original)
-        notificar_n8n("reserva_activa", {
-            "nombre": vecino.nombre,
-            "correo": vecino.correo,
-            "run": vecino.run,
-            "id_espacio": espacio.id_espacio,
-            "nombre_espacio": espacio.nombre,
-            "fecha": reserva.fecha,
-            "hora_inicio": reserva.hora_inicio,
-            "hora_fin": reserva.hora_fin,
-            "monto_total": reserva.total,
-            "reserva_id": reserva.id_reserva,
-        })
+        registrar_evento(request, f"Reserva confirmada y pagada para '{espacio.nombre}' (#{reserva.id_reserva})", "Pago autorizado")
 
-        # Limpia la sesión
         request.session.pop("reserva_pago", None)
-
-        messages.success(request, f" Reserva pagada correctamente. Monto total: ${reserva.total:,}.")
-        return render(request, "pagos/resultado_pago.html", {
-            "response": response,
-            "reserva": reserva,
-        })
-
+        messages.success(request, f"Reserva pagada correctamente. Monto total: ${reserva.total:,}.")
+        return render(request, "pagos/resultado_pago.html", {"response": response, "reserva": reserva})
     else:
-        messages.error(request, " El pago fue rechazado o cancelado. No se generó la reserva.")
+        registrar_evento(request, f"Pago rechazado para reserva en '{pago_data['espacio_id']}'", f"Estado: {status}")
+        messages.error(request, "El pago fue rechazado o cancelado.")
         return render(request, "pagos/resultado_pago.html", {"response": response})

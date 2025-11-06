@@ -87,14 +87,33 @@
                 </a>
               </li>
 
-                            <li>
+              <li>
                 <hr class="dropdown-divider border-secondary">
               </li>
               <li>
-  <a class="dropdown-item text-light" href="{% url 'lista_noticias' %}">
-    <i class="fa-regular fa-newspaper me-2 text-warning"></i> Noticias Vecinales
-  </a>
-</li>
+                <a class="dropdown-item text-light" href="{% url 'lista_noticias' %}">
+                  <i class="fa-regular fa-newspaper me-2 text-warning"></i> Noticias Vecinales
+                </a>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'mis_solicitudes' %}">
+                  <i class="fa-solid fa-envelope-open-text me-2 text-info"></i> Mis Solicitudes
+                </a>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'lista_documentos' %}">
+                  <i class="fa-solid fa-file-lines me-2 text-warning"></i> Documentos Institucionales
+                </a>
+              </li>
+
 
               {% endif %}
 
@@ -129,37 +148,42 @@
             </a>
           </li>
           {% endif %}
-{% if notificaciones %}
-<div class="dropdown">
-  <a class="nav-link text-light position-relative" href="#" id="notificacionesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="fa-solid fa-bell fa-lg"></i>
+          {% if notificaciones %}
+          <div class="dropdown">
+            <a class="nav-link text-light position-relative" href="#" id="notificacionesDropdown" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-bell fa-lg"></i>
 
-    {% if notificaciones_no_leidas %}
-      <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
-        {{ notificaciones_no_leidas|length }}
-      </span>
-    {% endif %}
-  </a>
+              {% if notificaciones_no_leidas %}
+              <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                {{ notificaciones_no_leidas|length }}
+              </span>
+              {% endif %}
+            </a>
 
-  <ul class="dropdown-menu dropdown-menu-end bg-dark text-light shadow-lg border-secondary" aria-labelledby="notificacionesDropdown" style="min-width: 280px; border-radius: 10px;">
-    {% for n in notificaciones %}
-      <li>
-        <a href="#" 
-           class="dropdown-item text-light py-2 marcar-leida {% if n in notificaciones_no_leidas %}fw-bold{% else %}text-muted{% endif %}" 
-           data-id="{{ n.id_notificacion }}">
-          <i class="fa-regular fa-circle me-2 {% if n in notificaciones_no_leidas %}text-info{% else %}text-secondary{% endif %}"></i>
-          {{ n.titulo }}
-        </a>
-      </li>
-      {% if not forloop.last %}
-        <li><hr class="dropdown-divider border-secondary"></li>
-      {% endif %}
-    {% empty %}
-      <li><span class="dropdown-item text-muted text-center py-2">Sin notificaciones</span></li>
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}
+            <ul class="dropdown-menu dropdown-menu-end bg-dark text-light shadow-lg border-secondary"
+              aria-labelledby="notificacionesDropdown" style="min-width: 280px; border-radius: 10px;">
+              {% for n in notificaciones %}
+              <li>
+                <a href="#"
+                  class="dropdown-item text-light py-2 marcar-leida {% if n in notificaciones_no_leidas %}fw-bold{% else %}text-muted{% endif %}"
+                  data-id="{{ n.id_notificacion }}">
+                  <i
+                    class="fa-regular fa-circle me-2 {% if n in notificaciones_no_leidas %}text-info{% else %}text-secondary{% endif %}"></i>
+                  {{ n.titulo }}
+                </a>
+              </li>
+              {% if not forloop.last %}
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              {% endif %}
+              {% empty %}
+              <li><span class="dropdown-item text-muted text-center py-2">Sin notificaciones</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
 
 
 

@@ -23,9 +23,10 @@ class Auditoria(models.Model):
 class Metricas(models.Model):
     id_metrica = models.AutoField(primary_key=True)
     descripcion = models.CharField(max_length=200, blank=True, null=True)
-    valor = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    valor = models.IntegerField(blank=True, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'metricas'
+

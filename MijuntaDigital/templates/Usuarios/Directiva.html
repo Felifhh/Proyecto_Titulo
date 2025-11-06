@@ -96,7 +96,41 @@
       </div>
     </div>
 
+    <!-- Gestión de Solicitudes Ciudadanas -->
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100 text-center"
+        style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        <div class="card-body">
+          <i class="fa-solid fa-envelope-circle-check fa-3x text-info mb-3"></i>
+          <h5 class="card-title text-light">Gestión de Solicitudes Ciudadanas</h5>
+          <p class="card-text">
+            Revisa y gestiona las solicitudes enviadas por los vecinos sobre mantención, luminarias o aseo.
+          </p>
+          <a href="{% url 'gestionar_solicitudes' %}" class="btn btn-outline-info w-100">
+            <i class="fa-solid fa-list-check me-1"></i> Revisar Solicitudes
+          </a>
+        </div>
+      </div>
+    </div>
+
+<!-- Panel de Auditoría y Métricas -->
+<div class="col-md-4">
+  <div class="card shadow-sm h-100 text-center"
+    style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+    <div class="card-body">
+      <i class="fa-solid fa-clipboard-list fa-3x text-warning mb-3"></i>
+      <h5 class="card-title text-light">Auditoría y Métricas del Sistema</h5>
+      <p class="card-text text-secondary">
+        Consulta los registros de auditoría y las métricas clave generadas por las acciones del sistema.
+      </p>
+      <a href="{% url 'panel_auditoria' %}" class="btn btn-outline-warning w-100">
+        <i class="fa-solid fa-chart-line me-1"></i> Ver Panel de Auditoría
+      </a>
+    </div>
   </div>
+</div>
+
+
 </div>
 
 <style>

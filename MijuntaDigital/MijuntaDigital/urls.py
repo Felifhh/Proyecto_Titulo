@@ -20,8 +20,9 @@ urlpatterns = [
     path("pagos/", include("pagos.urls")),
     path('notificaciones/', include('Notificaciones.urls')),
     path('noticias/', include('Noticia.urls')),
-
-
+    path("solicitudes/", include("Solicitudes.urls")),
+    path("documentos/", include("Documentos.urls")),
+    path("auditoria/", include("Auditoria.urls")),
 ]
 
 if settings.DEBUG:

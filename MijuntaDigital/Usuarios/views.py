@@ -5,6 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth.hashers import check_password
+from Auditoria.utils import registrar_evento  # 👈 NUEVA IMPORTACIÓN
 
 # Formularios y Modelos
 from .forms import RegistroVecinoForm, LoginForm, FotoPerfilForm
@@ -12,10 +13,9 @@ from .models import Vecino, Rol
 from Certificados.models import Certificado
 from Solicitudes.models import Solicitud
 from Reserva.models import Reserva
-
-# Decorador personalizado (rol)
 from Usuarios.decorators import require_role
 import requests
+
 
 def notificar_n8n(evento, datos):
     webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
@@ -31,38 +31,30 @@ def notificar_n8n(evento, datos):
 # ==============================================
 # REGISTRO DE NUEVO VECINO
 # ==============================================
-
 @require_http_methods(["GET", "POST"])
 def registro_vecino(request):
     """
     Permite que un vecino se registre en el sistema.
-    El registro queda en estado "Pendiente" hasta ser aprobado por el Presidente.
-    Muestra mensajes de validación personalizados según los validadores.
+    El registro queda en estado "Pendiente" hasta ser aprobado por la Directiva.
     """
     if request.method == "POST":
         form = RegistroVecinoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(
-                request,
-                "Registro enviado correctamente. Queda pendiente de validación por la directiva."
-            )
+            registrar_evento(request, "Registro de nuevo vecino", "Éxito")
+            messages.success(request, "Registro enviado correctamente. Queda pendiente de validación por la directiva.")
             return redirect('usuarios_registro_ok')
         else:
-            # 🧠 Si hay errores específicos, mostrar cada uno
+            registrar_evento(request, "Intento de registro fallido", "Error en validación")
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{error}")
-            # Si no hay errores concretos (caso raro), mensaje genérico
-            if not form.errors:
-                messages.error(request, "Verifica los datos ingresados. Hay errores en el formulario.")
     else:
         form = RegistroVecinoForm()
 
     return render(request, "Usuarios/registro.html", {"form": form})
 
 
-# AGREGA ESTA FUNCIÓN (probablemente la borraste sin querer)
 def registro_ok(request):
     """Página de confirmación luego del registro."""
     return render(request, "Usuarios/registro_ok.html")
@@ -112,25 +104,23 @@ def detalle_vecino(request, pk):
     return render(request, "Usuarios/detalle_vecino.html", {"vecino": vecino})
 
 
-# --- ACCIONES: APROBAR / RECHAZAR ---
+# ==============================================
+# APROBACIÓN / RECHAZO DE VECINOS
+# ==============================================
 @require_role('presidente')
 @require_POST
 def aprobar_vecino(request, pk):
-    """
-    Cambia el estado de un vecino pendiente a 'Activo'.
-    Solo el Presidente puede aprobar.
-    """
     vecino = get_object_or_404(Vecino, pk=pk)
     vecino.estado = "Activo"
     vecino.save()
 
-    #  Notificar a n8n
+    registrar_evento(request, f"Aprobación de vecino {vecino.nombre}", "Éxito")
+
     notificar_n8n("cuenta_aprobada", {
         "nombre": vecino.nombre,
         "correo": vecino.correo,
         "run": vecino.run
     })
-
     messages.success(request, f"{vecino.nombre} ha sido aprobado correctamente.")
     return redirect("usuarios_pendientes")
 
@@ -138,29 +128,25 @@ def aprobar_vecino(request, pk):
 @require_role('presidente')
 @require_POST
 def rechazar_vecino(request, pk):
-    """
-    Cambia el estado de un vecino pendiente a 'Rechazado'.
-    Solo el Presidente puede realizar esta acción.
-    """
     vecino = get_object_or_404(Vecino, pk=pk)
     vecino.estado = "Rechazado"
     vecino.save()
 
-    #  Notificar a n8n
+    registrar_evento(request, f"Rechazo de vecino {vecino.nombre}", "Éxito")
+
     notificar_n8n("cuenta_rechazada", {
         "nombre": vecino.nombre,
         "correo": vecino.correo,
         "run": vecino.run
     })
-
     messages.warning(request, f"{vecino.nombre} ha sido rechazado.")
     return redirect("usuarios_pendientes")
 
 
-# ==============================================
-# AUTENTICACIÓN (LOGIN / LOGOUT)
-# ==============================================
 
+# ==============================================
+# LOGIN / LOGOUT
+# ==============================================
 def login_view(request):
     """
     Inicia sesión verificando RUN y contraseña del vecino activo.
@@ -178,10 +164,13 @@ def login_view(request):
                 request.session["vecino_nombre"] = vecino.nombre
                 request.session["vecino_rol"] = (vecino.id_rol.nombre or '').strip().lower()
 
+                registrar_evento(request, f"Inicio de sesión de {vecino.nombre}", "Éxito")
                 messages.success(request, f"Bienvenido {vecino.nombre}")
             else:
+                registrar_evento(request, f"Intento fallido de login ({run})", "Contraseña incorrecta")
                 messages.error(request, "Contraseña incorrecta.")
         except Vecino.DoesNotExist:
+            registrar_evento(request, f"Intento de login con RUN inexistente ({run})", "RUN no encontrado")
             messages.error(request, "RUN no encontrado o no activo.")
 
         return redirect("home")
@@ -192,6 +181,7 @@ def logout_view(request):
     """
     Cierra sesión y elimina todos los datos guardados en request.session.
     """
+    registrar_evento(request, "Cierre de sesión", "Éxito")
     request.session.flush()
     messages.success(request, "Has cerrado sesión correctamente.")
     return redirect("home")
@@ -228,47 +218,51 @@ def perfil_vecino(request, id_vecino):
     reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
 
 
-    # -----------------------------
-    # CAMBIO DE ROL (solo Presidente)
-    # -----------------------------
+# ==============================================
+# CAMBIO DE ROL
+# ==============================================
+def perfil_vecino(request, id_vecino):
+    """
+    Permite visualizar y modificar el perfil de un vecino.
+    Incluye auditoría de cambios de rol o foto.
+    """
+    vecino_id = request.session.get("vecino_id")
+    if not vecino_id:
+        messages.error(request, "Debes iniciar sesión para acceder al perfil.")
+        return redirect("home")
+
+    usuario_sesion = get_object_or_404(Vecino, pk=vecino_id)
+    perfil = get_object_or_404(Vecino, pk=id_vecino)
+
+    if usuario_sesion.id_vecino != perfil.id_vecino and usuario_sesion.id_rol.nombre not in ["Presidente", "Secretario", "Tesorero"]:
+        messages.error(request, "No tienes permisos para ver este perfil.")
+        return redirect("home")
+
+    certificados = Certificado.objects.filter(id_vecino=perfil).order_by("-fecha_emision")[:5]
+    solicitudes = Solicitud.objects.filter(id_vecino=perfil).order_by("-fecha_creacion")[:5]
+    reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
+
+    # --- CAMBIO DE ROL (solo presidente) ---
     if request.method == "POST" and "rol_id" in request.POST and usuario_sesion.id_rol.nombre == "Presidente":
         nuevo_rol_id = request.POST.get("rol_id")
         nuevo_rol = Rol.objects.get(pk=nuevo_rol_id)
-
-        # Si el nuevo rol es Presidente → transferir el cargo
-        if nuevo_rol.nombre == "Presidente":
-            anterior_presidente = Vecino.objects.filter(id_rol__nombre="Presidente").first()
-            if anterior_presidente:
-                anterior_presidente.id_rol = Rol.objects.get(nombre="Vecino")
-                anterior_presidente.save()
-
-            usuario_sesion.id_rol = Rol.objects.get(nombre="Vecino")
-            usuario_sesion.save()
-            perfil.id_rol = nuevo_rol
-            perfil.save()
-
-            messages.success(request, f"Has delegado la presidencia a {perfil.nombre}.")
-            return redirect("usuarios_logout")
-
-        # Para cualquier otro cambio
         perfil.id_rol = nuevo_rol
         perfil.save()
+        registrar_evento(request, f"Cambio de rol de {perfil.nombre} a {nuevo_rol.nombre}", "Éxito")
         messages.success(request, f"El rol de {perfil.nombre} ha sido actualizado a {nuevo_rol.nombre}.")
         return redirect("perfil_vecino", id_vecino=perfil.id_vecino)
 
-    # -----------------------------
-    # ACTUALIZACIÓN DE FOTO
-    # -----------------------------
+    # --- ACTUALIZACIÓN DE FOTO ---
     if request.method == "POST" and "foto" in request.FILES:
         form_foto = FotoPerfilForm(request.POST, request.FILES, instance=perfil)
         if form_foto.is_valid():
             form_foto.save()
+            registrar_evento(request, f"Actualización de foto de perfil de {perfil.nombre}", "Éxito")
             messages.success(request, "Foto de perfil actualizada correctamente.")
             return redirect("perfil_vecino", id_vecino=perfil.id_vecino)
     else:
         form_foto = FotoPerfilForm(instance=perfil)
 
-    # Render del perfil
     roles = Rol.objects.all()
     return render(request, "Usuarios/perfil_vecino.html", {
         "perfil": perfil,
@@ -279,7 +273,6 @@ def perfil_vecino(request, id_vecino):
         "reservas": reservas,
         "form_foto": form_foto,
     })
-
 
 
 
@@ -331,25 +324,29 @@ def gestion_usuarios(request):
     })
 
 
+# ==============================================
+# ACTIVAR / DESACTIVAR USUARIOS
+# ==============================================
 @require_role('presidente')
 def desactivar_vecino(request, id_vecino):
-    """Desactiva a un vecino (solo visible desde la gestión de usuarios)."""
     vecino = get_object_or_404(Vecino, pk=id_vecino)
     vecino.estado = "Desactivado"
     vecino.save()
+
+    registrar_evento(request, f"Desactivación de vecino {vecino.nombre}", "Éxito")
     messages.info(request, f"{vecino.nombre} ha sido desactivado.")
     return redirect("gestion_usuarios")
 
 
 @require_role('presidente')
 def activar_vecino(request, id_vecino):
-    """Activa un vecino previamente desactivado."""
     vecino = get_object_or_404(Vecino, pk=id_vecino)
     vecino.estado = "Activo"
     vecino.save()
+
+    registrar_evento(request, f"Reactivación de vecino {vecino.nombre}", "Éxito")
     messages.success(request, f"{vecino.nombre} ha sido activado nuevamente.")
     return redirect("gestion_usuarios")
-
 
 @require_role('presidente')
 def cambiar_rol(request, id_vecino):

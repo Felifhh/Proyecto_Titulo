@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Panel de Auditoría{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="card shadow p-4" style="background-color: var(--color-bg-secondary); border: 0;">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0" style="color: var(--color-primary);">
+        <i class="fa-solid fa-clipboard-list me-2"></i> Panel de Auditoría
+      </h3>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="auditoriaTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-auditoria" data-bs-toggle="tab" data-bs-target="#panel-auditoria" type="button" role="tab">
+          <i class="fa-solid fa-table me-1"></i> Registros de Auditoría
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-metricas" data-bs-toggle="tab" data-bs-target="#panel-metricas" type="button" role="tab">
+          <i class="fa-solid fa-chart-line me-1"></i> Métricas del Sistema
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="auditoriaTabsContent">
+      <div class="tab-pane fade show active" id="panel-auditoria" role="tabpanel">
+
+        <form method="get" class="row g-3 align-items-center mb-4">
+          <div class="col-md-3">
+            <label for="fecha" class="form-label fw-bold text-light">Día:</label>
+            <input type="date" name="fecha" id="fecha" value="{{ fecha|date:'Y-m-d' }}" class="form-control form-control-sm">
+          </div>
+          <div class="col-md-4">
+            <label for="usuario" class="form-label fw-bold text-light">Filtrar por usuario:</label>
+            <select name="usuario" id="usuario" class="form-select form-select-sm">
+              <option value="todos">Todos</option>
+              {% for u in usuarios %}
+                <option value="{{ u.id_vecino }}" {% if u.id_vecino|stringformat:"s" == usuario_id %}selected{% endif %}>
+                  {{ u.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fa-solid fa-filter"></i> Aplicar filtros
+            </button>
+          </div>
+        </form>
+
+        <h4 class="mt-4 mb-3 text-center text-light"><i class="fa-solid fa-database me-2"></i> Registros de Auditoría</h4>
+
+        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+          <table class="table table-striped table-hover table-bordered align-middle shadow-sm">
+            <thead class="table-dark sticky-top">
+              <tr>
+                <th>Vecino</th>
+                <th>Acción</th>
+                <th>Resultado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in page_obj %}
+              <tr>
+                <td>{% if e.id_vecino %}{{ e.id_vecino.nombre }}{% else %}Sistema{% endif %}</td>
+                <td>{{ e.accion }}</td>
+                <td>{{ e.resultado }}</td>
+                <td>{{ e.fecha_evento|date:"d/m/Y H:i:s" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted">No hay registros para esta fecha.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-center mt-3">
+          <nav aria-label="Paginación auditoría">
+            <ul class="pagination pagination-sm">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?fecha={{ fecha|date:'Y-m-d' }}&usuario={{ usuario_id }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+              </li>
+              {% endif %}
+              <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?fecha={{ fecha|date:'Y-m-d' }}&usuario={{ usuario_id }}&page={{ page_obj.next_page_number }}">Siguiente</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="panel-metricas" role="tabpanel">
+        <div class="row mb-4 text-center">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white shadow">
+              <div class="card-body">
+                <h5 class="card-title">Vecinos Activos</h5>
+                <h3>{{ resumen.vecinos_activos }}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+              <div class="card-body">
+                <h5 class="card-title">Reservas</h5>
+                <h3>{{ resumen.reservas_no_canceladas }}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow">
+              <div class="card-body">
+                <h5 class="card-title">Actividades</h5>
+                <h3>{{ resumen.actividades_no_canceladas }}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-dark shadow">
+              <div class="card-body">
+                <h5 class="card-title">Certificados Emitidos</h5>
+                <h3>{{ resumen.certificados_emitidos }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="mt-4 mb-3 text-center text-light"><i class="fa-solid fa-chart-line me-2"></i> Métricas Diarias del Mes</h4>
+        <div class="card bg-dark shadow-sm p-3 mb-4"><canvas id="metricasChart" height="140"></canvas></div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+          const chartSeries = JSON.parse('{{ chart_series_json|escapejs }}');
+          const ctx = document.getElementById('metricasChart').getContext('2d');
+          const colors = ['#00aaff','#ff6b6b','#ffd93d','#6bcf63','#b967ff','#f87575','#00d4ff','#ffb84d'];
+          const datasets = chartSeries.map((serie, index) => ({
+            label: serie.label,
+            data: serie.data,
+            borderColor: colors[index % colors.length],
+            backgroundColor: colors[index % colors.length] + '55',
+            fill: false,
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 3
+          }));
+          new Chart(ctx, {
+            type: 'line',
+            data: { labels: chartSeries[0]?.labels || [], datasets },
+            options: {
+              plugins: { legend: { labels: { color: '#fff' } }, tooltip: { mode: 'index', intersect: false } },
+              interaction: { mode: 'nearest', axis: 'x', intersect: false },
+              scales: {
+                x: { ticks: { color: '#fff' }, grid: { color: '#333' }, title: { display: true, text: 'Días del mes', color: '#ccc' } },
+                y: { beginAtZero: true, ticks: { color: '#fff', stepSize: 1, callback: v => Number.isInteger(v) ? v : '' }, grid: { color: '#333' }, title: { display: true, text: 'Cantidad', color: '#ccc' } }
+              }
+            }
+          });
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

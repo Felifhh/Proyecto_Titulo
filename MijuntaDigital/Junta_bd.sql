@@ -187,6 +187,7 @@ CREATE TABLE solicitud (
     FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
 );
 
+
 -- Tabla de Bitácora / Auditoría
 CREATE TABLE auditoria (
     id_evento INT AUTO_INCREMENT PRIMARY KEY,
@@ -200,12 +201,16 @@ CREATE TABLE auditoria (
 -- Tabla de Documentos
 CREATE TABLE documento (
     id_documento INT AUTO_INCREMENT PRIMARY KEY,
+    id_vecino INT NULL,
     titulo VARCHAR(200) NOT NULL,
     tipo ENUM('Acta','Estatuto','Reglamento','Oficio') DEFAULT 'Acta',
-    ruta_archivo VARCHAR(255),
+    archivo VARCHAR(255) NOT NULL,
+    texto_extraido LONGTEXT NULL,
     version INT DEFAULT 1,
-    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
 );
+
 
 -- Tabla de Métricas Básicas (ejemplo simplificado)
 CREATE TABLE metricas (

@@ -1,3 +1,104 @@
+from datetime import datetime, date, timedelta
+from django.utils import timezone
+from django.core.paginator import Paginator
 from django.shortcuts import render
+from django.contrib import messages
+from django.db.models import Avg
+from django.db.models.expressions import RawSQL
+from collections import defaultdict
+import json
+import calendar
+from django.core.serializers.json import DjangoJSONEncoder
 
-# Create your views here.
+from Auditoria.models import Auditoria, Metricas
+from Usuarios.models import Vecino
+from Actividades.models import Actividad
+from Reserva.models import Reserva
+from Certificados.models import Certificado
+from Auditoria.utils import actualizar_metricas_globales
+
+
+def panel_auditoria(request):
+    rol = request.session.get("vecino_rol", "").lower()
+    if rol not in ["presidente", "secretario", "tesorero"]:
+        messages.error(request, "No tienes permisos para acceder a la auditoría.")
+        return render(request, "error_permisos.html")
+
+    usuario_id = request.GET.get("usuario")
+    fecha_str = request.GET.get("fecha")
+    hoy = timezone.localdate()
+
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else hoy
+    except (ValueError, TypeError):
+        fecha = hoy
+
+    inicio_mes = datetime(fecha.year, fecha.month, 1)
+    _, ultimo_dia = calendar.monthrange(fecha.year, fecha.month)
+    fin_mes = datetime(fecha.year, fecha.month, ultimo_dia, 23, 59, 59)
+
+    actualizar_metricas_globales()
+
+    eventos = Auditoria.objects.select_related("id_vecino").filter(
+        fecha_evento__range=(inicio_mes, fin_mes)
+    ).order_by("-fecha_evento")
+
+    if usuario_id and usuario_id != "todos":
+        eventos = eventos.filter(id_vecino_id=usuario_id)
+
+    paginator = Paginator(eventos, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    usuarios = Vecino.objects.filter(estado="Activo").order_by("nombre")
+
+    # Agrupar métricas por día del mes usando SQL nativo (sin timezone)
+    metricas_diarias = (
+        Metricas.objects
+        .annotate(dia=RawSQL("DATE(fecha)", []))
+        .values("dia", "descripcion")
+        .annotate(valor_promedio=Avg("valor"))
+        .filter(fecha__range=(inicio_mes, fin_mes))
+        .order_by("dia")
+    )
+
+    dias_mes = [date(fecha.year, fecha.month, d) for d in range(1, ultimo_dia + 1)]
+    etiquetas_dias = [d.strftime("%d") for d in dias_mes]
+
+    metricas_grouped = defaultdict(lambda: {d.strftime("%d"): 0 for d in dias_mes})
+
+    for m in metricas_diarias:
+        try:
+            dia_label = datetime.strptime(str(m["dia"]), "%Y-%m-%d").strftime("%d")
+        except Exception:
+            dia_label = str(m["dia"])
+        metricas_grouped[m["descripcion"]][dia_label] = int(m["valor_promedio"] or 0)
+
+    chart_series = []
+    for descripcion, valores_por_dia in metricas_grouped.items():
+        chart_series.append({
+            "label": descripcion,
+            "labels": etiquetas_dias,
+            "data": [valores_por_dia.get(d, 0) for d in etiquetas_dias],
+        })
+
+    # Resumen actualizado (excluye canceladas)
+    resumen = {
+        "vecinos_activos": Vecino.objects.filter(estado="Activo").count(),
+        "actividades_no_canceladas": Actividad.objects.exclude(estado="Cancelada").count(),
+        "reservas_no_canceladas": Reserva.objects.exclude(estado="Cancelada").count(),
+        "certificados_emitidos": Certificado.objects.filter(estado="Emitido").count(),
+    }
+
+    context = {
+        "page_obj": page_obj,
+        "usuarios": usuarios,
+        "usuario_id": usuario_id,
+        "resumen": resumen,
+        "fecha": fecha,
+        "hoy": hoy,
+        "chart_series_json": json.dumps(chart_series, cls=DjangoJSONEncoder),
+        "dias_mes": etiquetas_dias,
+    }
+
+    return render(request, "Auditoria/panel_auditoria.html", context)

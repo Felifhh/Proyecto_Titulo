@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Nueva Solicitud{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center text-primary fw-bold mb-4">
+    <i class="fa-solid fa-clipboard-list me-2"></i> Nueva Solicitud Ciudadana
+  </h2>
+
+  <div class="card bg-dark text-light p-4 shadow-sm border-secondary">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Tipo de solicitud</label>
+        <select name="tipo" class="form-select bg-dark text-light border-secondary">
+          <option value="Mantención">Mantención</option>
+          <option value="Luminarias">Luminarias</option>
+          <option value="Aseo">Aseo</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <textarea name="descripcion" rows="4" class="form-control bg-dark text-light border-secondary"
+                  placeholder="Describe brevemente el problema o solicitud"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fa-solid fa-paper-plane me-2"></i> Enviar Solicitud
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

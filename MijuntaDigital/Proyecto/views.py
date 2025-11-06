@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.db.models import Q, Count
 from django.utils import timezone
 from datetime import timedelta
+from Auditoria.utils import registrar_evento  # Integración de auditoría
 
 # Modelos
 from .models import Proyecto, VotoProyecto
@@ -17,44 +18,31 @@ from Usuarios.decorators import require_role
 
 
 # ==============================================
-# MIS PROYECTOS (solo vecinos autenticados)
+# MIS PROYECTOS (solo vecinos)
 # ==============================================
 @require_role(["presidente", "secretario", "tesorero", "vecino"])
 def mis_proyectos(request):
-    """
-    Muestra los proyectos creados por el vecino autenticado.
-    Los proyectos se listan en orden descendente por fecha.
-    """
     vecino_id = request.session.get("vecino_id")
     proyectos = Proyecto.objects.filter(id_vecino=vecino_id).order_by("-fecha_postulacion")
+    return render(request, "Proyecto/mis_proyectos.html", {"proyectos": proyectos})
 
-    return render(request, "Proyecto/mis_proyectos.html", {
-        "proyectos": proyectos,
-    })
 
 
 # ==============================================
-# CREAR NUEVO PROYECTO (solo vecinos)
+# CREAR NUEVO PROYECTO
 # ==============================================
 @require_http_methods(["GET", "POST"])
 @require_role(["presidente", "secretario", "tesorero", "vecino"])
 def crear_proyecto(request):
-    """
-    Permite a un vecino postular un nuevo proyecto.
-    Solo puede tener un proyecto activo o en revisión.
-    """
     vecino_id = request.session.get("vecino_id")
 
-    # Verificar si el vecino tiene un proyecto activo
     proyectos_activos = Proyecto.objects.filter(
         id_vecino=vecino_id,
         estado__in=["En Revisión", "En Votación"]
     )
+
     if proyectos_activos.exists():
-        messages.warning(
-            request,
-            "Ya tienes un proyecto activo o pendiente. Espera que finalice o sea rechazado antes de postular otro."
-        )
+        messages.warning(request, "Ya tienes un proyecto activo o pendiente.")
         return redirect("mis_proyectos")
 
     if request.method == "POST":
@@ -63,7 +51,6 @@ def crear_proyecto(request):
         presupuesto = request.POST.get("presupuesto")
         documento_adj = request.FILES.get("documento_adj")
 
-        # Crear proyecto
         Proyecto.objects.create(
             id_vecino_id=vecino_id,
             titulo=titulo,
@@ -74,54 +61,41 @@ def crear_proyecto(request):
             estado_votacion="En Espera de Votación"
         )
 
-        # Crear notificación para el Directorio
+        # 🔹 Auditoría
+        registrar_evento(request, f"Postulación del proyecto '{titulo}'", "Éxito")
+
+        # Notificación al directorio
         Notificacion.objects.create(
             titulo="Nueva postulación de proyecto",
             mensaje=f"Un vecino ha postulado el proyecto '{titulo}'.",
             tipo="directorio"
         )
 
-        messages.success(request, "Tu proyecto fue enviado correctamente y está en revisión.")
+        messages.success(request, "Tu proyecto fue enviado correctamente.")
         return redirect("mis_proyectos")
 
     return render(request, "Proyecto/crear_proyecto.html")
 
 
 # ==============================================
-# GESTIONAR PROYECTOS (solo roles de DIRECTIVA)
+# GESTIONAR PROYECTOS (Directiva)
 # ==============================================
 @require_role(["presidente", "secretario", "tesorero"])
 def gestionar_proyectos(request):
-    """
-    Permite al Directorio revisar los proyectos en estado 'En Revisión'.
-    Visible solo para Presidente, Secretario o Tesorero.
-    """
     proyectos = Proyecto.objects.filter(estado="En Revisión").order_by("-fecha_postulacion")
     query = request.GET.get("buscar", "").strip()
-
     if query:
-        proyectos = proyectos.filter(
-            Q(titulo__icontains=query) | Q(descripcion__icontains=query)
-        )
+        proyectos = proyectos.filter(Q(titulo__icontains=query) | Q(descripcion__icontains=query))
+    return render(request, "Proyecto/gestionar_proyectos.html", {"proyectos": proyectos, "query": query})
 
-    return render(request, "Proyecto/gestionar_proyectos.html", {
-        "proyectos": proyectos,
-        "query": query
-    })
 
 
 # ==============================================
-# ACTUALIZAR ESTADO DEL PROYECTO
-# (APROBAR / RECHAZAR)
+# APROBAR / RECHAZAR PROYECTO
 # ==============================================
 @require_POST
 @require_role(['presidente', 'secretario', 'tesorero'])
 def actualizar_estado_proyecto(request, id_proyecto, accion):
-    """
-    Permite al directorio aprobar o rechazar un proyecto vecinal.
-    Al aprobar → cambia a 'En Votación' y se inicia el periodo de 15 días.
-    Al rechazar → cambia a 'Rechazado'.
-    """
     proyecto = get_object_or_404(Proyecto, pk=id_proyecto)
 
     if accion == "aprobar":
@@ -130,32 +104,33 @@ def actualizar_estado_proyecto(request, id_proyecto, accion):
         proyecto.fecha_fin_votacion = timezone.now() + timedelta(days=15)
         proyecto.save()
 
-        # Notificación global
+        registrar_evento(request, f"Aprobación del proyecto '{proyecto.titulo}'", "Éxito")
+
         Notificacion.objects.create(
             titulo="Nuevo proyecto en votación",
-            mensaje=f"El proyecto '{proyecto.titulo}' ha sido aprobado y está disponible para votación vecinal.",
+            mensaje=f"El proyecto '{proyecto.titulo}' ha sido aprobado y está disponible para votación.",
             tipo="global"
         )
-
         messages.success(request, f"El proyecto '{proyecto.titulo}' fue aprobado y se encuentra en votación.")
 
     elif accion == "rechazar":
         proyecto.estado = "Rechazado"
         proyecto.save()
 
+        registrar_evento(request, f"Rechazo del proyecto '{proyecto.titulo}'", "Éxito")
+
         Notificacion.objects.create(
             titulo="Proyecto rechazado",
             mensaje=f"El proyecto '{proyecto.titulo}' fue rechazado por la directiva.",
             tipo="directorio"
         )
-
         messages.warning(request, f"El proyecto '{proyecto.titulo}' fue rechazado correctamente.")
-
     else:
+        registrar_evento(request, f"Intento de cambio de estado inválido para proyecto '{proyecto.titulo}'", "Error")
         messages.error(request, "Acción no válida.")
-        return redirect("gestionar_proyectos")
 
     return redirect("gestionar_proyectos")
+
 
 
 # ==============================================
@@ -246,7 +221,6 @@ def votar_proyecto(request, id_proyecto, decision):
 def cerrar_votaciones_expiradas():
     """
     Cierra automáticamente los proyectos cuya fecha_fin_votacion ya venció.
-    Se debe ejecutar mediante una tarea cron o desde n8n.
     """
     hoy = timezone.now()
     expirados = Proyecto.objects.filter(estado="En Votación", fecha_fin_votacion__lt=hoy)
@@ -255,13 +229,14 @@ def cerrar_votaciones_expiradas():
         votos_a_favor = VotoProyecto.objects.filter(id_proyecto=proyecto, voto=True).count()
         votos_en_contra = VotoProyecto.objects.filter(id_proyecto=proyecto, voto=False).count()
 
-        if votos_a_favor > votos_en_contra:
-            proyecto.estado_votacion = "Aprobado por Votación"
-        else:
-            proyecto.estado_votacion = "Rechazado por Votación"
-
+        proyecto.estado_votacion = "Aprobado por Votación" if votos_a_favor > votos_en_contra else "Rechazado por Votación"
         proyecto.estado = "Finalizado"
         proyecto.save()
+
+        # 🔹 Auditoría
+        registrar_evento(None, f"Cierre automático del proyecto '{proyecto.titulo}'", "Finalizado")
+
+
 
 # ==============================================
 # PÁGINA DE INICIO DEL MÓDULO DE PROYECTOS
