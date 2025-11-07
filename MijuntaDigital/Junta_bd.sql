@@ -216,7 +216,7 @@ CREATE TABLE documento (
 CREATE TABLE metricas (
     id_metrica INT AUTO_INCREMENT PRIMARY KEY,
     descripcion VARCHAR(200),
-    valor DECIMAL(12,2),
+    valor INT,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
