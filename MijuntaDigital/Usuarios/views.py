@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth.hashers import check_password
-from Auditoria.utils import registrar_evento  # 👈 NUEVA IMPORTACIÓN
+from Auditoria.utils import registrar_evento  #  NUEVA IMPORTACIÓN
 
 # Formularios y Modelos
 from .forms import RegistroVecinoForm, LoginForm, FotoPerfilForm
@@ -15,6 +15,11 @@ from Solicitudes.models import Solicitud
 from Reserva.models import Reserva
 from Usuarios.decorators import require_role
 import requests
+
+from django.utils.crypto import get_random_string
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from datetime import timedelta
 
 
 def notificar_n8n(evento, datos):
@@ -358,3 +363,129 @@ def cambiar_rol(request, id_vecino):
         vecino.save()
         messages.success(request, f"Rol de {vecino.nombre} actualizado correctamente.")
     return redirect("gestion_usuarios")
+
+
+# ==============================================
+# RECUPERACIÓN DE CONTRASEÑA 
+# ==============================================
+
+# Diccionario temporal para almacenar los códigos de verificación
+codigos_reset = {}
+
+
+def solicitar_recuperacion(request):
+    if request.method == "POST":
+        correo = request.POST.get("correo")
+        try:
+            vecino = Vecino.objects.get(correo=correo, estado="Activo")
+
+            # Generar código temporal de 6 dígitos
+            codigo = get_random_string(length=6, allowed_chars="0123456789")
+
+            # Guardar en diccionario y sesión
+            codigos_reset[correo] = {
+                "codigo": codigo,
+                "expira": timezone.now() + timedelta(minutes=5)
+            }
+            request.session["correo_reset"] = correo  # Guarda el correo para el siguiente paso
+
+            # Enviar por n8n
+            notificar_n8n("recuperacion_codigo", {
+                "nombre": vecino.nombre,
+                "correo": vecino.correo,
+                "codigo": codigo
+            })
+
+            messages.success(request, "Se ha enviado un código de verificación a tu correo electrónico.")
+            return redirect("verificar_codigo")
+
+        except Vecino.DoesNotExist:
+            messages.error(request, "No existe una cuenta activa con ese correo.")
+    
+    return render(request, "Usuarios/recuperar_contrasena.html")
+
+
+
+def verificar_codigo(request):
+    correo = request.session.get("correo_reset")
+
+    if not correo:
+        messages.error(request, "No hay una solicitud activa de recuperación.")
+        return redirect("solicitar_recuperacion")
+
+    if request.method == "POST":
+        codigo_ingresado = request.POST.get("codigo")
+
+        datos_guardados = codigos_reset.get(correo)
+        if not datos_guardados:
+            messages.error(request, "No hay una solicitud activa para este correo.")
+            return redirect("solicitar_recuperacion")
+
+        # Validar código y tiempo de expiración
+        if timezone.now() > datos_guardados["expira"]:
+            del codigos_reset[correo]
+            request.session.pop("correo_reset", None)
+            messages.error(request, "El código ha expirado. Solicita uno nuevo.")
+            return redirect("solicitar_recuperacion")
+
+        if codigo_ingresado != datos_guardados["codigo"]:
+            messages.error(request, "Código incorrecto.")
+            return render(request, "Usuarios/verificar_codigo.html", {"correo": correo})
+
+        # Si es correcto, pasar al cambio de contraseña
+        messages.success(request, "Código verificado correctamente. Ahora puedes cambiar tu contraseña.")
+        return redirect("cambiar_contrasena")
+
+    return render(request, "Usuarios/verificar_codigo.html", {"correo": correo})
+
+
+
+def cambiar_contrasena(request):
+    """
+    Paso 3: Permite establecer una nueva contraseña (no igual a la anterior).
+    """
+    correo = request.session.get("correo_reset")
+    if not correo:
+        messages.error(request, "No hay una solicitud de recuperación activa.")
+        return redirect("solicitar_recuperacion")
+
+    if request.method == "POST":
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        if nueva != confirmar:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "Usuarios/cambiar_contrasena.html")
+
+        try:
+            vecino = Vecino.objects.get(correo=correo)
+        except Vecino.DoesNotExist:
+            messages.error(request, "Usuario no encontrado.")
+            return redirect("solicitar_recuperacion")
+
+        # Validar que no sea igual a la anterior
+        if check_password(nueva, vecino.contrasena):
+            messages.error(request, "La nueva contraseña no puede ser igual a la anterior.")
+            return render(request, "Usuarios/cambiar_contrasena.html")
+
+        # Actualizar contraseña
+        vecino.contrasena = make_password(nueva)
+        vecino.save()
+
+        # Notificar por n8n
+        notificar_n8n("contrasena_actualizada", {
+            "nombre": vecino.nombre,
+            "correo": vecino.correo,
+            "fecha": timezone.localtime().strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+        registrar_evento(request, f"Recuperación de contraseña exitosa para {vecino.nombre}", "Éxito")
+
+        # Limpiar sesión y código
+        request.session.pop("correo_reset", None)
+        codigos_reset.pop(correo, None)
+
+        messages.success(request, "Tu contraseña fue actualizada correctamente.")
+        return redirect("home")
+
+    return render(request, "Usuarios/cambiar_contrasena.html")
