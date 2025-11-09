@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS metricas;
 DROP TABLE IF EXISTS notificaciones_notificacion;
 DROP TABLE IF EXISTS notificaciones_notificacionusuario;
 DROP TABLE IF EXISTS voto_proyecto;
+DROP TABLE IF EXISTS transaccion;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -239,6 +240,19 @@ CREATE TABLE notificaciones_notificacionusuario (
     REFERENCES `notificaciones_notificacion` (`id_notificacion`)
     ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  
+  CREATE TABLE transaccion (
+    id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
+    id_vecino INT,
+    token VARCHAR(100),
+    orden_compra VARCHAR(50),
+    monto INT NOT NULL,
+    estado VARCHAR(20),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    descripcion VARCHAR(255),
+    FOREIGN KEY (id_vecino) REFERENCES vecino(id_vecino)
+);
+
 
 INSERT INTO notificaciones_notificacion (titulo, mensaje, tipo)
 VALUES ('Bienvenido a MiJuntaDigital', 'Sistema de notificaciones activado correctamente.', 'global');
