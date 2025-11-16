@@ -1,0 +1,5 @@
+{
+  "module": "proyectos",
+  "title": "Proyectos vecinales",
+  "content": "Acceso: desde la página principal en 'Trámites y servicios' → 'Proyectos vecinales' o mediante el menú desplegable del vecino.\n\nSecciones:\n1) Mis proyectos: muestra los proyectos del vecino y permite crear uno nuevo. Para postular se piden: título, descripción, presupuesto estimado y un documento de respaldo. No se puede crear otra postulación hasta que la actual finalice o sea rechazada.\n\n2) Proyectos en votación: lista los proyectos aceptados que están en votación. El vecino puede votar una sola vez (a favor o en contra) y no puede cambiar su voto. Las votaciones duran 15 días desde su aprobación."
+}

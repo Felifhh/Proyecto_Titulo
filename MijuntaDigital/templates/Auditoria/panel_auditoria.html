@@ -3,7 +3,25 @@
 {% block title %}Panel de Auditoría{% endblock %}
 
 {% block content %}
-<div class="container my-4">
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container my-4" style="border: 0cap;">
   <div class="card shadow p-4" style="background-color: var(--color-bg-secondary); border: 0;">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -34,6 +52,7 @@
       <div class="tab-pane fade show active" id="panel-auditoria" role="tabpanel">
 
         <form method="get" class="row g-3 align-items-center mb-4">
+              <input type="hidden" name="active_tab" value="auditoria">
           <div class="col-md-3">
             <label for="fecha" class="form-label fw-bold text-light">Día:</label>
             <input type="date" name="fecha" id="fecha" value="{{ fecha|date:'Y-m-d' }}" class="form-control form-control-sm">
@@ -107,6 +126,7 @@
 <h4 class="mt-5 mb-3 text-center text-light"><i class="fa-solid fa-credit-card me-2"></i> Transacciones Webpay</h4>
 
 <form method="get" class="row g-3 align-items-center mb-4">
+      <input type="hidden" name="active_tab" value="transacciones">
   <div class="col-md-3">
     <label for="fecha_transaccion" class="form-label fw-bold text-light">Día:</label>
     <input type="date" name="fecha_transaccion" id="fecha_transaccion" value="{{ fecha_t|date:'Y-m-d' }}" class="form-control form-control-sm">
@@ -146,11 +166,11 @@
         <td>{{ t.orden_compra }}</td>
         <td>${{ t.monto|floatformat:0 }}</td>
         <td>
-          {% if t.estado == "Autorizada" %}
+          {% if t.estado|lower == "authorized" or t.estado|lower == "autorizada" %}
             <span class="badge bg-success">{{ t.estado }}</span>
-          {% elif t.estado == "Rechazada" %}
+          {% elif t.estado|lower == "rechazada" %}
             <span class="badge bg-danger">{{ t.estado }}</span>
-          {% elif t.estado == "Anulada" %}
+          {% elif t.estado|lower == "anulada" %}
             <span class="badge bg-warning text-dark">{{ t.estado }}</span>
           {% else %}
             <span class="badge bg-secondary">{{ t.estado }}</span>
@@ -188,12 +208,29 @@
 
 
       <div class="tab-pane fade" id="panel-metricas" role="tabpanel">
+
+          <h4 class="text-light fw-bold mb-3">
+              <i class="fa-solid fa-file-lines me-2"></i> Generación de Reportes
+          </h4>
+
+          <a href="{% url 'descargar_reporte_pdf' %}" 
+            class="btn btn-primary px-4 py-2 shadow-sm d-flex align-items-center gap-2 mb-4"
+            data-bs-toggle="tooltip" 
+            data-bs-placement="top" 
+            title="Genera un reporte semanal y lo recibirá por correo">
+
+              <i class="fa-solid fa-file-arrow-down fa-lg"></i>
+              <span class="fw-bold">Generar Reporte Semanal</span>
+          </a>
+
+          <hr class="border-secondary mb-4">
+
         <div class="row mb-4 text-center">
           <div class="col-md-3">
             <div class="card bg-primary text-white shadow">
               <div class="card-body">
                 <h5 class="card-title">Vecinos Activos</h5>
-                <h3>{{ resumen.vecinos_activos }}</h3>
+                <h3 style="color: white;">{{ resumen.vecinos_activos }}</h3>
               </div>
             </div>
           </div>
@@ -201,7 +238,7 @@
             <div class="card bg-success text-white shadow">
               <div class="card-body">
                 <h5 class="card-title">Reservas</h5>
-                <h3>{{ resumen.reservas_no_canceladas }}</h3>
+                <h3 style="color: white;">{{ resumen.reservas_no_canceladas }}</h3>
               </div>
             </div>
           </div>
@@ -209,7 +246,7 @@
             <div class="card bg-warning text-dark shadow">
               <div class="card-body">
                 <h5 class="card-title">Actividades</h5>
-                <h3>{{ resumen.actividades_no_canceladas }}</h3>
+                <h3 style="color: white;">{{ resumen.actividades_no_canceladas }}</h3>
               </div>
             </div>
           </div>
@@ -217,7 +254,7 @@
             <div class="card bg-info text-dark shadow">
               <div class="card-body">
                 <h5 class="card-title">Certificados Emitidos</h5>
-                <h3>{{ resumen.certificados_emitidos }}</h3>
+                <h3 style="color: white;">{{ resumen.certificados_emitidos }}</h3>
               </div>
             </div>
           </div>
@@ -253,6 +290,18 @@
               }
             }
           });
+        </script>
+        <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const activeTab = "{{ active_tab }}";
+            if (activeTab) {
+                const triggerEl = document.querySelector(`#tab-${activeTab}`);
+                if (triggerEl) {
+                    const tab = new bootstrap.Tab(triggerEl);
+                    tab.show();
+                }
+            }
+        });
         </script>
       </div>
     </div>

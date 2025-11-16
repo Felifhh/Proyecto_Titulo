@@ -1,0 +1,5 @@
+{
+  "module": "solicitudes_registro",
+  "title": "Solicitudes de Registro",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Solicitudes de registro'.\n\nDescripción: muestra a los vecinos que solicitaron registrarse y requieren aprobación del directorio. Se listan con su información básica.\n\nAcciones: un miembro del directorio puede aceptar o rechazar la solicitud. Al aceptar, el vecino pasa a estado 'Activo'. Al rechazar, queda descartado y no podrá iniciar sesión."
+}

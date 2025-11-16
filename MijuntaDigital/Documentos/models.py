@@ -12,7 +12,7 @@ class Documento(models.Model):
 
     id_documento = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=20, choices=TIPOS, default='Acta')
+    tipo = models.CharField(max_length=200)
     archivo = models.FileField(upload_to='documentos/')
     texto_extraido = models.TextField(blank=True, null=True)
     version = models.IntegerField(default=1)

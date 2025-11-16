@@ -1,0 +1,5 @@
+{
+  "module": "mis_reservas",
+  "title": "Mis Reservas",
+  "content": "Acceso: desde el menú desplegable del vecino → 'Mis Reservas'.\n\nDescripción: muestra las reservas activas del vecino. Si la IA consulta por las reservas del usuario, debe leer la base de datos filtrando por el id del vecino y mostrar las reservas activas con su id, espacio, fecha, horario y estado."
+}

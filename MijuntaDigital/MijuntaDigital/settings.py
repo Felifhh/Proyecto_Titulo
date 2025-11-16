@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'Auditoria',
     'pagos',
     'Notificaciones',
+    'chatbot',
 
     # Utilidad
     'widget_tweaks',
@@ -105,19 +106,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'MijuntaDigital.wsgi.application'
 
 # =========================================
-# BASE DE DATOS
+# BASE DE DATOS skySQL
 # =========================================
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'junta_vecinal',
-        'USER': 'root',
-        'PASSWORD': 'junta123',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': 'junta_vecinal',   # el nombre exacto de tu BD en SkySQL
+        'USER': 'admin_nuevo',   # tu usuario que ocupamos para conectar
+        'PASSWORD': 'Junta.123',
+        'HOST': 'serverless-us-east1.sysp0000.db2.skysql.com',
+        'PORT': '4091',
+        'OPTIONS': {
+            'ssl': {
+                'ca': ''  # vacío porque SkySQL serverless usa certificados públicos
+            },
+            'charset': 'utf8mb4',
+        }
     }
 }
+
+DATABASES['default']['CONN_MAX_AGE'] = 60
 
 
 # =========================================
@@ -151,3 +160,9 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 WEBPAY_COMMERCE_CODE = "597055555532"  # Código de comercio de prueba
 WEBPAY_API_KEY = "579B532A7440BB0C9079DED94D31EA161EB9A1A1F9123A2B1D1F52A6E57A4E97"
 WEBPAY_ENVIRONMENT = "TEST"
+
+# =========================================
+# Configuracion de Celery
+# =========================================
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"

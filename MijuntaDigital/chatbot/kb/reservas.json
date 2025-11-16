@@ -1,0 +1,5 @@
+{
+  "module": "reservas",
+  "title": "Reservas de espacios",
+  "content": "Acceso: desde el menú desplegable del vecino → 'Reservar espacios'. La IA debe leer la base de datos para listar únicamente los espacios disponibles y no inventar otros.\n\nDisponibilidad: cada espacio tiene botones para 'Reservar' y 'Ver disponibilidad'. Al ver la disponibilidad se muestran las horas del día marcadas como 'LIBRE' o 'OCUPADO'. Es posible cambiar el día para consultar otras fechas.\n\nReserva: el formulario de reserva solicita fecha, hora de inicio, hora de fin y una observación opcional. Al enviar la reserva se inicia el pago vía WebPay; cuando la transacción se completa la reserva queda 'Activa'."
+}

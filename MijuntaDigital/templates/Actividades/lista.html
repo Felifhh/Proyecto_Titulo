@@ -3,21 +3,22 @@
 {% block title %}Gestión de Actividades{% endblock %}
 
 {% block content %}
-  <!-- MENSAJES FLASH -->
 {% if messages %}
-<div class="container mt-4 d-flex justify-content-center">
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
   <div class="col-md-8">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center" 
-         style="font-size: 0.95rem; border-radius: 10px;" 
-         role="alert">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
       <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"
-              style="filter: invert(1); opacity: 0.9;"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
     </div>
     {% endfor %}
   </div>
 </div>
+<script src="{% static 'js/mensaje.js' %}"></script>
 {% endif %}
 
 <div class="container mt-4">
@@ -65,7 +66,7 @@
             <div class="card-body d-flex flex-column justify-content-between">
               <div>
                 <h5 class="card-title text-info mb-1">{{ act.titulo }}</h5>
-                <p class="text-muted small mb-2">{{ act.descripcion|truncatewords:15 }}</p>
+                <p class=" small mb-2">{{ act.descripcion|truncatewords:15 }}</p>
                 <ul class="list-unstyled small mb-2">
                   <li><i class="fa-solid fa-location-dot me-1 text-warning"></i> {{ act.ubicacion }}</li>
                   <li><i class="fa-regular fa-calendar me-1"></i> {{ act.fecha|date:"d/m/Y" }}</li>

@@ -14,6 +14,57 @@ from django.urls import reverse
 from transbank.webpay.webpay_plus.transaction import Transaction
 from Auditoria.utils import registrar_evento  #  Integración de auditoría
 
+
+def iniciar_pago_reserva(request, vecino_id, espacio_id, fecha_str, hora_inicio_str, hora_fin_str, total=None):
+    """Inicia una transacción WebPay para una reserva. Guarda datos en session['reserva_pago']
+    y devuelve el dict de respuesta de la transbank (contiene 'url' y 'token').
+
+    Este helper está pensado para ser llamado tanto desde la vista `reservar_desde_catalogo`
+    como desde otras partes (por ejemplo el chatbot). No crea la Reserva en la BD.
+    """
+    vecino = get_object_or_404(Vecino, pk=vecino_id)
+    espacio = get_object_or_404(EspacioComunal, pk=espacio_id, estado="Activo")
+
+    # calcular total si no viene
+    try:
+        if total is None:
+            hi = datetime.strptime(hora_inicio_str, "%H:%M").time()
+            hf = datetime.strptime(hora_fin_str, "%H:%M").time()
+            # estimar horas enteras (floor)
+            horas = (datetime.combine(datetime.today(), hf) - datetime.combine(datetime.today(), hi)).total_seconds() / 3600
+            horas = max(0, int(horas))
+            total = espacio.monto_hora * horas
+    except Exception:
+        # si falla el parseo, intentar usar cero para que la transacción almacene algo;
+        # quien llame debe validar que total sea correcto
+        total = total or 0
+
+    # Preparar transacción WebPay
+    buy_order = f"RSV-{vecino.id_vecino}-{int(timezone.now().timestamp())}"
+    session_id = request.session.session_key or str(vecino.id_vecino)
+    return_url = request.build_absolute_uri(reverse("retorno_pago_reserva"))
+
+    tx = Transaction()
+    tx.configure_for_testing()
+    response = tx.create(buy_order, session_id, total, return_url)
+
+    # Guardar en sesión para el retorno
+    request.session["reserva_pago"] = {
+        "vecino_id": vecino.id_vecino,
+        "espacio_id": espacio.id_espacio,
+        "fecha": str(fecha_str),
+        "hora_inicio": hora_inicio_str,
+        "hora_fin": hora_fin_str,
+        "total": total,
+        "buy_order": buy_order,
+        "session_id": session_id,
+        "payment_url": response.get("url"),
+        "payment_token": response.get("token"),
+    }
+    request.session.modified = True
+
+    return response
+
 def notificar_n8n(evento, datos):
     webhook_url = "https://felifhhh.app.n8n.cloud/webhook/9a0798f9-34e0-4e76-b7c8-874c7f636a7a"  # URL definitiva
     try:
@@ -154,28 +205,10 @@ def reservar_desde_catalogo(request, id_espacio):
         form = ReservaForm(request.POST)
         if form.is_valid():
             reserva_temp = form.save(commit=False)
-            total = espacio.monto_hora * (reserva_temp.hora_fin.hour - reserva_temp.hora_inicio.hour)
-
-            # Auditoría: intento de reserva
+            reserva_temp = form.save(commit=False)
+            # usar el helper para iniciar pago
             registrar_evento(request, f"Reserva solicitada para '{espacio.nombre}' el {reserva_temp.fecha}", "Pendiente de pago")
-
-            buy_order = f"RSV-{vecino.id_vecino}-{int(timezone.now().timestamp())}"
-            session_id = request.session.session_key or str(vecino.id_vecino)
-            return_url = request.build_absolute_uri(reverse("retorno_pago_reserva"))
-
-            tx = Transaction()
-            tx.configure_for_testing()
-            response = tx.create(buy_order, session_id, total, return_url)
-
-            request.session["reserva_pago"] = {
-                "vecino_id": vecino.id_vecino,
-                "espacio_id": espacio.id_espacio,
-                "fecha": str(reserva_temp.fecha),
-                "hora_inicio": reserva_temp.hora_inicio.strftime("%H:%M"),
-                "hora_fin": reserva_temp.hora_fin.strftime("%H:%M"),
-                "total": total,
-            }
-
+            response = iniciar_pago_reserva(request, vecino.id_vecino, espacio.id_espacio, str(reserva_temp.fecha), reserva_temp.hora_inicio.strftime("%H:%M"), reserva_temp.hora_fin.strftime("%H:%M"))
             return render(request, "pagos/iniciar_pago.html", {"url": response["url"], "token": response["token"]})
         else:
             registrar_evento(request, f"Error en intento de reserva para '{espacio.nombre}'", "Formulario inválido")

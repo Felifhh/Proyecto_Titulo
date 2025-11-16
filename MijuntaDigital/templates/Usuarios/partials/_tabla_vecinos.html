@@ -36,20 +36,24 @@
         </td>
 
         <td>
-          {% if estado_tab == "Activo" %}
-            <form method="post" action="{% url 'cambiar_rol' v.id_vecino %}">
-              {% csrf_token %}
-              <select name="rol_id" class="form-select form-select-sm">
-                {% for rol in roles %}
-                  <option value="{{ rol.id_rol }}" {% if rol.id_rol == v.id_rol.id_rol %}selected{% endif %}>
-                    {{ rol.nombre }}
-                  </option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-sm btn-outline-primary mt-1">Cambiar</button>
-            </form>
+          {% if request.session.vecino_rol == "presidente" %}
+              {% if estado_tab == "Activo" %}
+                <form method="post" action="{% url 'cambiar_rol' v.id_vecino %}">
+                  {% csrf_token %}
+                  <select name="rol_id" class="form-select form-select-sm">
+                    {% for rol in roles %}
+                      <option value="{{ rol.id_rol }}" {% if rol.id_rol == v.id_rol.id_rol %}selected{% endif %}>
+                        {{ rol.nombre }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-primary mt-1">Cambiar</button>
+                </form>
+              {% else %}
+                <span>{{ v.id_rol.nombre }}</span>
+              {% endif %}
           {% else %}
-            <span>No modificable</span>
+              <span style="color: white;">{{ v.id_rol.nombre }}</span>
           {% endif %}
         </td>
 

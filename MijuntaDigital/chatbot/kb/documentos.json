@@ -1,0 +1,5 @@
+{
+  "module": "documentos",
+  "title": "Documentos",
+  "content": "Acceso: desde el menú desplegable del vecino → 'Mis Documentos'.\n\nDescripción: el vecino puede subir documentos mediante 'Subir Documento' (formulario con título, tipo de documento y archivo en formato PDF o PNG). Tras subir, el documento se guarda y se realiza OCR si corresponde. Si el vecino pregunta sobre documentos, la IA debe dar una explicación breve sobre el proceso."
+}

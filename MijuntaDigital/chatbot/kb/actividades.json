@@ -1,0 +1,5 @@
+{
+  "module": "actividades",
+  "title": "Actividades",
+  "content": "Acceso: desde el menú desplegable del vecino → 'Actividades'.\n\nDescripción: se mostrará una lista de actividades clasificadas en 'Activas', 'Finalizadas' y 'Canceladas'. Si el vecino pregunta por actividades disponibles, la IA deberá leer las actividades con estado 'Activa' desde la base de datos y mostrarlas.\n\nInscripciones: cada actividad tiene un cupo; los vecinos pueden inscribirse gratuitamente y cancelar su inscripción cuando lo deseen.\n\nCreación: existe un botón para crear una nueva actividad. El formulario solicita: título, ubicación, descripción, fecha, hora inicio, hora fin y cupos. Opcionalmente se puede vincular una reserva activa (si el vecino la tiene) y los datos de la reserva se rellenarán automáticamente. El creador de una actividad puede cancelarla."
+}

@@ -11,16 +11,29 @@ from django.views.decorators.http import require_http_methods
 from Usuarios.decorators import require_role
 from .models import Documento
 from .forms import DocumentoForm
+from django.db.models import Q
 
 
 
 @require_role(["presidente", "secretario", "tesorero", "vecino"])
 def lista_documentos(request):
-    """
-    Lista todos los documentos institucionales subidos.
-    """
-    documentos = Documento.objects.all().order_by("-fecha_subida")
-    return render(request, "Documentos/lista_documentos.html", {"documentos": documentos})
+    query = request.GET.get("buscar", "").strip()
+
+    vecino_id = request.session.get("vecino_id")
+    documentos = Documento.objects.filter(id_vecino_id=vecino_id).order_by("-fecha_subida")
+
+    # Búsqueda universal (título + tipo + descripción + OCR)
+    if query:
+        documentos = documentos.filter(
+            Q(titulo__icontains=query) |
+            Q(tipo__icontains=query) |
+            Q(texto_extraido__icontains=query)
+        )
+
+    return render(request, "Documentos/lista_documentos.html", {
+        "documentos": documentos,
+        "query": query,
+    })
 
 
 @require_role(["presidente", "secretario", "tesorero", "vecino"])
@@ -57,7 +70,7 @@ def detalle_documento(request, id_documento):
     
     # Detectar si el archivo es imagen
     url = documento.archivo.url.lower()
-    es_imagen = url.endswith(".jpg") or url.endswith(".jpeg") or url.endswith(".png")
+    es_imagen = url.endswith(".jpg") or url.endswith(".jpeg") or url.endswith(".png") or url.endswith(".webp")
 
     return render(request, "Documentos/detalle_documento.html", {
         "documento": documento,

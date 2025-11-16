@@ -1,0 +1,5 @@
+{
+  "module": "solicitudes",
+  "title": "Mis Solicitudes",
+  "content": "Acceso: desde el menú desplegable del vecino → 'Mis Solicitudes'.\n\nDescripción: muestra una lista de las solicitudes ciudadanas del vecino con su estado y permite crear una nueva solicitud mediante un formulario que solicita el tipo de solicitud y la descripción."
+}

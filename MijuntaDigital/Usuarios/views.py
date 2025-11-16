@@ -13,8 +13,10 @@ from .models import Vecino, Rol
 from Certificados.models import Certificado
 from Solicitudes.models import Solicitud
 from Reserva.models import Reserva
+from pagos.models import Transaccion
 from Usuarios.decorators import require_role
 import requests
+from django.db.models import Sum
 
 from django.utils.crypto import get_random_string
 from django.contrib.auth.hashers import make_password
@@ -172,7 +174,6 @@ def login_view(request):
                 registrar_evento(request, f"Inicio de sesión de {vecino.nombre}", "Éxito")
                 messages.success(request, f"Bienvenido {vecino.nombre}")
             else:
-                registrar_evento(request, f"Intento fallido de login ({run})", "Contraseña incorrecta")
                 messages.error(request, "Contraseña incorrecta.")
         except Vecino.DoesNotExist:
             registrar_evento(request, f"Intento de login con RUN inexistente ({run})", "RUN no encontrado")
@@ -247,6 +248,11 @@ def perfil_vecino(request, id_vecino):
     solicitudes = Solicitud.objects.filter(id_vecino=perfil).order_by("-fecha_creacion")[:5]
     reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
 
+    # --- TOTAL RECAUDADO (solo transacciones Authorized) ---
+    total_recaudado = Transaccion.objects.filter(
+        estado="Authorized"
+    ).aggregate(total=Sum('monto'))['total'] or 0
+
     # --- CAMBIO DE ROL (solo presidente) ---
     if request.method == "POST" and "rol_id" in request.POST and usuario_sesion.id_rol.nombre == "Presidente":
         nuevo_rol_id = request.POST.get("rol_id")
@@ -277,17 +283,20 @@ def perfil_vecino(request, id_vecino):
         "solicitudes": solicitudes,
         "reservas": reservas,
         "form_foto": form_foto,
+
+        # ⬇ NUEVA VARIABLE AGREGADA ⬇
+        "total_recaudado": total_recaudado,
     })
 
 
 
 
+
 # ==============================================
-# GESTIÓN DE USUARIOS (solo PRESIDENTE)
+# GESTIÓN DE USUARIOS
 # ==============================================
 from django.db.models import Q
-
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def gestion_usuarios(request):
     """
     Panel administrativo del Presidente.
@@ -332,7 +341,7 @@ def gestion_usuarios(request):
 # ==============================================
 # ACTIVAR / DESACTIVAR USUARIOS
 # ==============================================
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def desactivar_vecino(request, id_vecino):
     vecino = get_object_or_404(Vecino, pk=id_vecino)
     vecino.estado = "Desactivado"
@@ -343,7 +352,7 @@ def desactivar_vecino(request, id_vecino):
     return redirect("gestion_usuarios")
 
 
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def activar_vecino(request, id_vecino):
     vecino = get_object_or_404(Vecino, pk=id_vecino)
     vecino.estado = "Activo"
@@ -353,9 +362,9 @@ def activar_vecino(request, id_vecino):
     messages.success(request, f"{vecino.nombre} ha sido activado nuevamente.")
     return redirect("gestion_usuarios")
 
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def cambiar_rol(request, id_vecino):
-    """Actualiza el rol de un vecino (solo Presidente)."""
+    """Actualiza el rol de un vecino."""
     if request.method == "POST":
         nuevo_rol_id = request.POST.get("rol_id")
         vecino = get_object_or_404(Vecino, pk=id_vecino)

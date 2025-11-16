@@ -3,90 +3,148 @@
 {% block title %}Perfil de {{ perfil.nombre }}{% endblock %}
 
 {% block content %}
+
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
 <div class="container my-4">
-  <div class="card shadow p-4">
-    <div class="row">
+
+  <!-- CARD PRINCIPAL -->
+  <div class="card shadow p-4" style="background-color: var(--color-bg-secondary); border: 0cap var(--color-border);">
+
+    <div class="row" >
       <div class="col-md-3 text-center">
 
-        <!-- Imagen de perfil -->
+        <!-- Imagen -->
         {% if perfil.foto %}
-          <img id="preview_foto" src="{{ perfil.foto.url }}" class="rounded-circle img-fluid mb-3 shadow-sm" width="130" height="130" style="object-fit: cover;">
+          <img id="preview_foto" src="{{ perfil.foto.url }}" class="rounded-circle img-fluid mb-3 shadow-sm"
+               width="140" height="140" style="object-fit: cover;">
         {% else %}
-          <img id="preview_foto" src="{% static 'img/user-placeholder.png' %}" class="rounded-circle img-fluid mb-3 shadow-sm" width="130" height="130">
+          <img id="preview_foto" src="{% static 'img/user-placeholder.png' %}" class="rounded-circle img-fluid mb-3 shadow-sm"
+               width="140" height="140">
         {% endif %}
 
-        <!-- Subir nueva foto -->
+        <!-- Cambiar foto -->
         {% if usuario_sesion.id_vecino == perfil.id_vecino %}
         <form method="post" enctype="multipart/form-data" class="mt-2">
           {% csrf_token %}
-          <!-- Input oculto -->
           <input type="file" name="foto" id="id_foto" accept="image/*" style="display:none;" onchange="previewAndSubmit(this)">
-          
-          <!-- Botón visual -->
           <label for="id_foto" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
             <i class="bi bi-camera"></i> Cambiar foto
           </label>
         </form>
         {% endif %}
 
-        <h4 class="mt-3 text-capitalize">{{ perfil.nombre }}</h4>
+        <h4 class="mt-3 text-capitalize" style="color: white;">{{ perfil.nombre }}</h4>
         <span class="badge bg-primary text-capitalize">{{ perfil.id_rol.nombre }}</span>
         <p class="text-muted mb-0">{{ perfil.estado }}</p>
 
-        <!-- Cambio de rol (solo para el Presidente) -->
-        {% if usuario_sesion.id_rol.nombre == "presidente" %}
-        <form method="post" class="mt-3">
-          {% csrf_token %}
-          <select name="rol_id" class="form-select my-2">
-            {% for rol in roles %}
-              <option value="{{ rol.id_rol }}" {% if rol.id_rol == perfil.id_rol.id_rol %}selected{% endif %}>
-                {{ rol.nombre }}
-              </option>
-            {% endfor %}
-          </select>
-          <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill">Actualizar Rol</button>
-        </form>
-        {% endif %}
       </div>
 
+      <!-- INFORMACIÓN PERSONAL -->
       <div class="col-md-9">
-        <h5 class="mb-3">Datos Personales</h5>
+        <h5 class="mb-3" style="color: var(--color-primary);">Datos Personales</h5>
+
         <ul class="list-group mb-3">
-          <li class="list-group-item"><strong>RUN:</strong> {{ perfil.run }}</li>
-          <li class="list-group-item"><strong>Dirección:</strong> {{ perfil.direccion }}</li>
-          <li class="list-group-item"><strong>Correo:</strong> {{ perfil.correo }}</li>
-          <li class="list-group-item"><strong>Teléfono:</strong> {{ perfil.telefono }}</li>
-          <li class="list-group-item"><strong>Fecha de registro:</strong> {{ perfil.fecha_registro|date:"d/m/Y" }}</li>
+          <li class="list-group-item bg-transparent border-secondary text-white">
+            <strong class="text-white">RUN:</strong> {{ perfil.run }}
+          </li>
+          <li class="list-group-item bg-transparent border-secondary text-white">
+            <strong class="text-white">Dirección:</strong> {{ perfil.direccion }}
+          </li>
+          <li class="list-group-item bg-transparent border-secondary text-white">
+            <strong class="text-white">Correo:</strong> {{ perfil.correo }}
+          </li>
+          <li class="list-group-item bg-transparent border-secondary text-white">
+            <strong class="text-white">Teléfono:</strong> {{ perfil.telefono }}
+          </li>
+          <li class="list-group-item bg-transparent border-secondary text-white">
+            <strong class="text-white">Fecha de registro:</strong> {{ perfil.fecha_registro|date:"d/m/Y" }}
+          </li>
         </ul>
 
-        <h5>Actividad Reciente</h5>
+        <!-- ACTIVIDAD RECIENTE -->
+        <h5 class="mb-2" style="color: var(--color-primary);">Actividad Reciente</h5>
+
         <ul class="list-group">
           {% for c in certificados %}
-            <li class="list-group-item">📜 Certificado {{ c.tipo }} - {{ c.fecha_emision|date:"d/m/Y H:i" }}</li>
+            <li class="list-group-item bg-transparent border-secondary text-white">
+              Certificado {{ c.tipo }} — {{ c.fecha_emision|date:"d/m/Y H:i" }}
+            </li>
           {% empty %}
-            <li class="list-group-item text-muted">No tiene certificados recientes.</li>
+            <li class="list-group-item bg-transparent border-secondary text-white">
+              No tiene certificados recientes.
+            </li>
           {% endfor %}
+
           {% for s in solicitudes %}
-            <li class="list-group-item">📨 Solicitud {{ s.tipo }} - {{ s.estado }}</li>
+            <li class="list-group-item bg-transparent border-secondary text-white">
+              Solicitud {{ s.tipo }} — {{ s.estado }}
+            </li>
           {% endfor %}
+
           {% for r in reservas %}
-            <li class="list-group-item">📅 Reserva en {{ r.espacio }} - {{ r.estado }}</li>
+            <li class="list-group-item bg-transparent border-secondary text-white">
+              Reserva en {{ r.espacio }} — {{ r.estado }}
+            </li>
           {% endfor %}
         </ul>
+
       </div>
     </div>
   </div>
+
+  <!-- CARD TOTAL RECAUDADO (CENTRADA) -->
+  <div class="d-flex justify-content-center mt-4">
+    <div class="card shadow p-4"
+         style="width: 380px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); text-align:center;">
+
+      <h4 class="mb-3" style="color: var(--color-primary);">
+        <i class="bi bi-cash-coin"></i> Total Recaudado
+      </h4>
+
+      <div class="p-3 rounded"
+           style="background-color: var(--color-bg-primary); border: 1px solid var(--color-border);">
+
+          <small class="text-white">Gracias al apoyo de todos los vecinos hemos recaudado:</small>
+        <h2 class="fw-bold text-success mb-0">
+          ${{ total_recaudado|floatformat:0 }}
+        </h2>
+
+
+      </div>
+
+    </div>
+  </div>
+  <br>
+
 </div>
 
-<!-- Script para previsualización -->
+<!-- SCRIPT PREVISUALIZACIÓN -->
 <script>
 function previewAndSubmit(input) {
-  const [file] = input.files;
-  if (file) {
-    const preview = document.getElementById('preview_foto');
-    preview.src = URL.createObjectURL(file);
-    setTimeout(() => input.form.submit(), 400);
-  }
+    const [file] = input.files;
+    if (file) {
+        const preview = document.getElementById('preview_foto');
+        preview.src = URL.createObjectURL(file);
+        setTimeout(() => input.form.submit(), 400);
+    }
 }
 </script>
+
 {% endblock %}

@@ -8,6 +8,6 @@ class DocumentoForm(forms.ModelForm):
         fields = ['titulo', 'tipo', 'archivo']
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'tipo':  forms.TextInput(attrs={'class': 'form-control'}),
             'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }

@@ -1,0 +1,5 @@
+{
+  "module": "solicitudes_certificados",
+  "title": "Solicitudes de Certificados",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Solicitudes de certificados'.\n\nDescripción: lista de todas las solicitudes de certificados digitales enviadas por los vecinos que requieren revisión.\n\nAcciones: un miembro del directorio puede aceptar o rechazar la solicitud. Al aprobarse, el sistema genera automáticamente el certificado en PDF y queda disponible para el vecino."
+}

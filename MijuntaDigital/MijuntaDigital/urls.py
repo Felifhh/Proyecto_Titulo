@@ -23,6 +23,7 @@ urlpatterns = [
     path("solicitudes/", include("Solicitudes.urls")),
     path("documentos/", include("Documentos.urls")),
     path("auditoria/", include("Auditoria.urls")),
+    path('chatbot/', include('chatbot.urls')),
 ]
 
 if settings.DEBUG:

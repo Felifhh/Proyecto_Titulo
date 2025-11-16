@@ -18,11 +18,14 @@ from django.utils import timezone
 # ==============================================
 def lista_actividades(request):
     ahora = timezone.now()
+    tz = timezone.get_current_timezone()
 
-    # Auto-finalización de actividades vencidas
+    # Auto-finalización de actividades vencidas (corregido con timezone aware)
     for act in Actividad.objects.filter(estado="Activa"):
-        fin = datetime.combine(act.fecha, act.hora_fin)
-        if fin <= ahora.replace(tzinfo=None):
+        fin_naive = datetime.combine(act.fecha, act.hora_fin)
+        fin_aware = timezone.make_aware(fin_naive, tz)
+
+        if fin_aware <= ahora:
             act.estado = "Finalizada"
             act.save()
             registrar_evento(None, f"Finalización automática de actividad '{act.titulo}'", "Sistema")
@@ -37,7 +40,9 @@ def lista_actividades(request):
     )
 
     if busqueda:
-        actividades = actividades.filter(Q(titulo__icontains=busqueda) | Q(descripcion__icontains=busqueda))
+        actividades = actividades.filter(
+            Q(titulo__icontains=busqueda) | Q(descripcion__icontains=busqueda)
+        )
 
     return render(
         request,
@@ -110,11 +115,16 @@ def cancelar_actividad(request, id_actividad):
 # ==============================================
 def detalle_actividad(request, id_actividad):
     act = get_object_or_404(Actividad, pk=id_actividad)
-    ahora = timezone.now()
-    fin_actividad = datetime.combine(act.fecha, act.hora_fin)
+
+    ahora = timezone.now()  # aware datetime
+    tz = timezone.get_current_timezone()
+
+    # Combinar fecha + hora fin y volverlo aware
+    fin_actividad_naive = datetime.combine(act.fecha, act.hora_fin)
+    fin_actividad = timezone.make_aware(fin_actividad_naive, tz)
 
     # Finalización automática
-    if act.estado == "Activa" and fin_actividad <= ahora.replace(tzinfo=None):
+    if act.estado == "Activa" and fin_actividad <= ahora:
         act.estado = "Finalizada"
         act.save()
         registrar_evento(None, f"Finalización automática de actividad '{act.titulo}'", "Sistema")
@@ -122,10 +132,10 @@ def detalle_actividad(request, id_actividad):
     inscritos = act.inscripciones.count()
     disponibles = max(0, (act.cupos or 0) - inscritos)
 
-    # ✅ Verificar si el vecino está inscrito
+    # Verificar si el vecino está inscrito
     esta_inscrito = False
-    if request.session.get("vecino_id"):
-        vecino_id = request.session["vecino_id"]
+    vecino_id = request.session.get("vecino_id")
+    if vecino_id:
         esta_inscrito = act.inscripciones.filter(id_vecino_id=vecino_id).exists()
 
     return render(request, "Actividades/detalle.html", {
@@ -134,6 +144,7 @@ def detalle_actividad(request, id_actividad):
         "disponibles": disponibles,
         "esta_inscrito": esta_inscrito,
     })
+
 
 # ==============================================
 # INSCRIBIRSE A UNA ACTIVIDAD

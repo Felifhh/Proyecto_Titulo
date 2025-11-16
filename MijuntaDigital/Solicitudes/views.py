@@ -72,20 +72,30 @@ def mis_solicitudes(request):
 def gestionar_solicitudes(request):
     """
     Muestra todas las solicitudes ciudadanas (de todos los vecinos).
-    Permite filtrar por estado o tipo.
+    Permite filtrar por estado y por búsqueda.
     """
-    solicitudes = Solicitud.objects.all().order_by("-fecha_creacion")
-    query = request.GET.get("buscar", "").strip()
 
+    # Obtener estado desde la URL (default = Pendiente)
+    estado_actual = request.GET.get("estado", "Pendiente")
+
+    # Filtrar por estado
+    solicitudes = Solicitud.objects.filter(estado=estado_actual).order_by("-fecha_creacion")
+
+    # Buscador
+    query = request.GET.get("buscar", "").strip()
     if query:
         solicitudes = solicitudes.filter(
-            Q(tipo__icontains=query) | Q(descripcion__icontains=query)
+            Q(tipo__icontains=query) |
+            Q(descripcion__icontains=query) |
+            Q(id_vecino__nombre__icontains=query)
         )
 
     return render(request, "Solicitudes/gestionar_solicitudes.html", {
         "solicitudes": solicitudes,
         "query": query,
+        "estado_actual": estado_actual,
     })
+
 
 
 # ==============================================
