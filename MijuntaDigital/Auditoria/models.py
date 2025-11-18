@@ -12,7 +12,7 @@ class Auditoria(models.Model):
     id_evento = models.AutoField(primary_key=True)
     id_vecino = models.ForeignKey('Usuarios.Vecino', models.DO_NOTHING, db_column='id_vecino')
     accion = models.CharField(max_length=255)
-    fecha_evento = models.DateTimeField(blank=True, null=True)
+    fecha_evento = models.DateTimeField(auto_now_add=True)
     resultado = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:

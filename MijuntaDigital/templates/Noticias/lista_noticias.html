@@ -22,7 +22,7 @@
 <script src="{% static 'js/mensaje.js' %}"></script>
 {% endif %}
 
-<div class="container mt-4">
+<div class="container mt-4" style="border: 0cap;">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="text-light"><i class="fa-regular fa-newspaper me-2"></i>Noticias</h2>
     {% if request.session.vecino_rol and request.session.vecino_rol|lower in "presidente,secretario,tesorero" %}

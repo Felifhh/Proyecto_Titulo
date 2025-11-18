@@ -2,16 +2,14 @@
 {% block title %}Detalle del Proyecto{% endblock %}
 {% load static %}
 {% block content %}
+
 {% if messages %}
-<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+<div class="container mt-4 d-flex justify-content-center">
   <div class="col-md-8">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
-      role="alert">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative" role="alert">
       <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-
-      <!-- Barra de progreso -->
+      <button type="button" class="btn-close btn-close-custom"></button>
       <div class="alert-progress"></div>
     </div>
     {% endfor %}
@@ -21,60 +19,85 @@
 {% endif %}
 
 <div class="container py-5">
+
+  {% if proyecto.estado == "En Votación" %}
+  <div class="alert alert-info text-center fw-bold alerta-contador">
+      Tiempo restante:
+      <span class="contador text-muted"
+      data-id="{{ proyecto.id_proyecto }}"
+      data-segundos="{{ tiempo_restante }}">
+</span>
+
+  </div>
+  {% endif %}
+
   <h2 class="text-primary mb-4">
     <i class="fa-solid fa-folder-open me-2"></i>{{ proyecto.titulo }}
   </h2>
 
   <div class="card bg-dark text-light border-secondary p-4 shadow-sm">
+
     <p class="mb-3">{{ proyecto.descripcion }}</p>
 
     <p><strong>Presupuesto:</strong> {{ proyecto.presupuesto|default:"No especificado" }} CLP</p>
-    <p><strong>Estado:</strong> {{ proyecto.estado }}</p>
-    <p><strong>Estado de votación:</strong> {{ proyecto.estado_votacion }}</p>
+
+    <!--  ID PARA AJAX -->
+    <p><strong>Estado:</strong> <span id="estado-proyecto">{{ proyecto.estado }}</span></p>
+    <p><strong>Estado de votación:</strong> <span id="estado-votacion">{{ proyecto.estado_votacion }}</span></p>
+
     <p><strong>Fecha de postulación:</strong> {{ proyecto.fecha_postulacion|date:"d/m/Y H:i" }}</p>
 
     {% if proyecto.documento_adj %}
     <p>
-      <strong>Documento adjunto: </strong>
+      <strong>Documento adjunto:</strong>
       <a href="{{ proyecto.documento_adj.url }}" class="text-info" target="_blank">
-        <i class="fa-solid fa-file-arrow-down me-1"></i>  Descargar archivo
+        <i class="fa-solid fa-file-arrow-down me-1"></i> Descargar archivo
       </a>
     </p>
     {% else %}
     <p><strong>Documento adjunto:</strong> No se adjuntó ningún archivo.</p>
     {% endif %}
 
-    {% if proyecto.estado == "En Votación" %}
-    <hr>
-    <h5 class="text-success mb-3">Participa en la votación</h5>
+    <!--  CONTENEDOR PARA VOTACIÓN -->
+    <div id="zona-votacion" {% if proyecto.estado != 'En Votación' %}style="display:none"{% endif %}>
+        <hr>
+        <h5 class="text-success mb-3">Participa en la votación</h5>
 
-    {% if ya_voto %}
-    <p class="text-warning"><i class="fa-solid fa-circle-check me-1"></i>Ya emitiste tu voto para este proyecto.</p>
-    {% else %}
-    <div class="d-flex gap-3">
-      <a href="{% url 'votar_proyecto' proyecto.id_proyecto 'favor' %}" class="btn btn-success">
-        <i class="fa-solid fa-thumbs-up me-1"></i> Votar A Favor
-      </a>
-      <a href="{% url 'votar_proyecto' proyecto.id_proyecto 'contra' %}" class="btn btn-danger">
-        <i class="fa-solid fa-thumbs-down me-1"></i> Votar En Contra
-      </a>
+        {% if ya_voto %}
+        <p class="text-warning"><i class="fa-solid fa-circle-check me-1"></i>Ya emitiste tu voto para este proyecto.</p>
+        {% else %}
+        <div class="d-flex gap-3">
+          <a href="{% url 'votar_proyecto' proyecto.id_proyecto 'favor' %}" class="btn btn-success">
+            <i class="fa-solid fa-thumbs-up me-1"></i> Votar A Favor
+          </a>
+          <a href="{% url 'votar_proyecto' proyecto.id_proyecto 'contra' %}" class="btn btn-danger">
+            <i class="fa-solid fa-thumbs-down me-1"></i> Votar En Contra
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+          <p><strong>Votos a favor:</strong> {{ votos_a_favor }}</p>
+          <p><strong>Votos en contra:</strong> {{ votos_en_contra }}</p>
+        </div>
     </div>
-    {% endif %}
 
-    <div class="mt-4">
-      <p><strong>Votos a favor:</strong> {{ votos_a_favor }}</p>
-      <p><strong>Votos en contra:</strong> {{ votos_en_contra }}</p>
+    <!--  CONTENEDOR PARA FINALIZADO -->
+    <div id="zona-finalizado" {% if proyecto.estado != 'Finalizado' %}style="display:none"{% endif %}>
+        <hr>
+        <h5 class="text-info">Resultado final</h5>
+        <p><strong>Estado por votación:</strong> {{ proyecto.estado_votacion }}</p>
+        <p><strong>Votos a favor:</strong> {{ votos_a_favor }}</p>
+        <p><strong>Votos en contra:</strong> {{ votos_en_contra }}</p>
     </div>
 
-    {% elif proyecto.estado == "Finalizado" %}
-    <hr>
-    <h5 class="text-info">Resultado final</h5>
-    <p><strong>Estado por votación:</strong> {{ proyecto.estado_votacion }}</p>
-    <p><strong>Votos a favor:</strong> {{ votos_a_favor }}</p>
-    <p><strong>Votos en contra:</strong> {{ votos_en_contra }}</p>
-    {% endif %}
+    <!--  MENSAJE DE CIERRE AUTOMÁTICO -->
+    <div id="mensaje-finalizado" class="alert alert-success mt-3" style="display:none;">
+        🏁 La votación ha finalizado automáticamente.
+    </div>
 
     <hr>
+
     <div class="mt-3 text-end">
       <a href="{% url 'proyectos_votacion' %}" class="btn btn-outline-light">
         <i class="fa-solid fa-arrow-left me-1"></i> Volver
@@ -82,4 +105,13 @@
     </div>
   </div>
 </div>
+
+{% block extra_scripts %}
+<script src="{% static 'js/contador.js' %}"></script>
+<script>
+    window.proyectoId = "{{ proyecto.id_proyecto }}";
+</script>
+<script src="{% static 'js/ajax.js' %}"></script>
+{% endblock %}
+
 {% endblock %}

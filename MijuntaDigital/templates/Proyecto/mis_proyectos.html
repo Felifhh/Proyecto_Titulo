@@ -21,7 +21,7 @@
 <script src="{% static 'js/mensaje.js' %}"></script>
 {% endif %}
 
-<div class="container mt-4">
+<div class="container mt-4" style="border: 0cap;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="text-light"><i class="fa-solid fa-clipboard-list me-2 text-primary"></i> Mis Proyectos Vecinales</h2>
     <a href="{% url 'crear_proyecto' %}" class="btn btn-success">
@@ -56,4 +56,5 @@
   </div>
   {% endif %}
 </div>
+<br>
 {% endblock %}

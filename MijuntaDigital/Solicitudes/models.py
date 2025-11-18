@@ -18,11 +18,12 @@ class Solicitud(models.Model):
     ]
 
     id_solicitud = models.AutoField(primary_key=True)
-    id_vecino = models.ForeignKey(Vecino, on_delete=models.CASCADE, db_column='id_vecino')
+    id_vecino = models.ForeignKey(Vecino, on_delete=models.CASCADE, db_column='id_vecino', null=True, blank=True)
     tipo = models.CharField(max_length=20, choices=TIPOS, default='Otro')
     descripcion = models.TextField(blank=True, null=True)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='Pendiente')
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
 
     class Meta:
         db_table = 'solicitud'
@@ -30,4 +31,6 @@ class Solicitud(models.Model):
         verbose_name_plural = 'Solicitudes Ciudadanas'
 
     def __str__(self):
-        return f"{self.tipo} - {self.estado} ({self.id_vecino.nombre})"
+        vecino = self.id_vecino.nombre if self.id_vecino else "Sin vecino"
+        return f"{self.tipo} - {self.estado} ({vecino})"
+

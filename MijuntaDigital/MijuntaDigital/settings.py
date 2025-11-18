@@ -1,7 +1,9 @@
 from pathlib import Path
 import os
 from django.urls import reverse_lazy
+from dotenv import load_dotenv
 
+load_dotenv()
 # =========================================
 # RUTAS BÁSICAS
 # =========================================
@@ -34,7 +36,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static', 'media')
 # =========================================
 # SEGURIDAD Y CONFIGURACIÓN BASE
 # =========================================
-SECRET_KEY = 'django-insecure-lvagyi3pl#txvtb5!h2$!ldgkxl4821=txet-^%=pt2l%x6&vz'
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     
 
     # Aplicaciones del proyecto
+    'MijuntaDigital.apps.MijuntaDigitalConfig',
     'Usuarios',
     'Certificados',
     'Proyecto',
@@ -105,28 +108,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'MijuntaDigital.wsgi.application'
 
-# =========================================
-# BASE DE DATOS skySQL
-# =========================================
+# ==========================
+# BASE DE DATOS SKYSQL
+# ==========================
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'junta_vecinal',   # el nombre exacto de tu BD en SkySQL
-        'USER': 'admin_nuevo',   # tu usuario que ocupamos para conectar
-        'PASSWORD': 'Junta.123',
-        'HOST': 'serverless-us-east1.sysp0000.db2.skysql.com',
-        'PORT': '4091',
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.getenv('SUPABASE_HOST'),
+        'PORT': os.getenv('SUPABASE_PORT'),
+        'NAME': os.getenv('SUPABASE_DB'),
+        'USER': os.getenv('SUPABASE_USER'),
+        'PASSWORD': os.getenv('SUPABASE_PASSWORD'),
         'OPTIONS': {
-            'ssl': {
-                'ca': ''  # vacío porque SkySQL serverless usa certificados públicos
-            },
-            'charset': 'utf8mb4',
+            'sslmode': 'require',  # Supabase exige SSL
         }
     }
 }
 
-DATABASES['default']['CONN_MAX_AGE'] = 60
+
+
+# ==============================================
+# GEMINI API KEY (desde .env)
+# ==============================================
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_ENABLED = bool(GEMINI_API_KEY)
+
 
 
 # =========================================
@@ -146,6 +153,8 @@ LANGUAGE_CODE = 'es-cl'
 TIME_ZONE = 'America/Santiago'
 USE_I18N = True
 USE_TZ = True
+DATETIME_FORMAT = "d/m/Y H:i:s"
+
 
 # =========================================
 # ID AUTO

@@ -11,4 +11,6 @@ urlpatterns = [
     path('votacion/', views.proyectos_votacion, name='proyectos_votacion'),
     path('votar/<int:id_proyecto>/<str:decision>/', views.votar_proyecto, name='votar_proyecto'),
     path('actualizar/<int:id_proyecto>/<str:accion>/', views.actualizar_estado_proyecto, name='actualizar_estado_proyecto'),
+    path("detalle/<int:id>/", views.detalle_proyecto, name="detalle_proyecto"),
+    path("api/estado/<int:id>/", views.api_estado_proyecto, name="api_estado_proyecto"),
 ]

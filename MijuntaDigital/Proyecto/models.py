@@ -22,7 +22,7 @@ class Proyecto(models.Model):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
     presupuesto = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    documento_adj = models.CharField(max_length=255, blank=True, null=True)
+    documento_adj = models.FileField(upload_to='proyectos/', null=True, blank=True)
     fecha_postulacion = models.DateTimeField(default=timezone.now)
     estado = models.CharField(max_length=20, choices=ESTADOS_ADMIN, default='En Revisión')
     estado_votacion = models.CharField(max_length=25, choices=ESTADOS_VOTACION, default='En Espera de Votación')
@@ -50,7 +50,6 @@ class Proyecto(models.Model):
         self.save()
 
     class Meta:
-        managed = False
         db_table = 'proyecto'
 
 
@@ -62,7 +61,6 @@ class VotoProyecto(models.Model):
     fecha_voto = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
         db_table = 'voto_proyecto'
         unique_together = ('id_proyecto', 'id_vecino')
 

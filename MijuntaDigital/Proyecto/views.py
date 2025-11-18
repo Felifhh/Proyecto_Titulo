@@ -16,6 +16,39 @@ from Notificaciones.models import Notificacion
 # Decorador personalizado (rol)
 from Usuarios.decorators import require_role
 
+from django.http import JsonResponse
+
+from django.http import JsonResponse
+from .models import Proyecto
+
+
+def api_estado_proyecto(request, id):
+    try:
+        proyecto = Proyecto.objects.get(pk=id)
+    except Proyecto.DoesNotExist:
+        return JsonResponse({"error": "not_found"}, status=404)
+
+    return JsonResponse({
+        "estado": proyecto.estado,
+        "estado_votacion": proyecto.estado_votacion,
+        "cerrado": proyecto.estado == "Finalizado",
+        "servidor": timezone.now().isoformat()
+    })
+
+
+def calcular_tiempo_restante(proyecto):
+    """Calcula el tiempo restante en segundos para votaciones."""
+    if not proyecto.fecha_fin_votacion:
+        return None
+
+    ahora = timezone.now()
+    diferencia = proyecto.fecha_fin_votacion - ahora
+
+    if diferencia.total_seconds() < 0:
+        return 0  # Ya venció
+
+    return int(diferencia.total_seconds())
+
 
 # ==============================================
 # MIS PROYECTOS (solo vecinos)
@@ -24,7 +57,14 @@ from Usuarios.decorators import require_role
 def mis_proyectos(request):
     vecino_id = request.session.get("vecino_id")
     proyectos = Proyecto.objects.filter(id_vecino=vecino_id).order_by("-fecha_postulacion")
-    return render(request, "Proyecto/mis_proyectos.html", {"proyectos": proyectos})
+
+    # ← Agregar cálculo del tiempo restante
+    for p in proyectos:
+        p.tiempo_restante = calcular_tiempo_restante(p)
+
+    return render(request, "Proyecto/mis_proyectos.html", {
+        "proyectos": proyectos
+    })
 
 
 
@@ -101,7 +141,7 @@ def actualizar_estado_proyecto(request, id_proyecto, accion):
     if accion == "aprobar":
         proyecto.estado = "En Votación"
         proyecto.fecha_inicio_votacion = timezone.now()
-        proyecto.fecha_fin_votacion = timezone.now() + timedelta(days=15)
+        proyecto.fecha_fin_votacion = timezone.now() + timezone.timedelta(days=15)
         proyecto.save()
 
         registrar_evento(request, f"Aprobación del proyecto '{proyecto.titulo}'", "Éxito")
@@ -156,15 +196,15 @@ def proyectos_votacion(request):
 # ==============================================
 @require_role(["presidente", "secretario", "tesorero", "vecino"])
 def detalle_proyecto(request, id_proyecto):
-    """
-    Muestra información completa del proyecto seleccionado.
-    Incluye votos actuales si está en votación.
-    """
     proyecto = get_object_or_404(Proyecto, pk=id_proyecto)
+
     votos_a_favor = VotoProyecto.objects.filter(id_proyecto=proyecto, voto=True).count()
     votos_en_contra = VotoProyecto.objects.filter(id_proyecto=proyecto, voto=False).count()
-    ya_voto = False
 
+    # ← Añadir tiempo restante
+    tiempo_restante = calcular_tiempo_restante(proyecto)
+
+    ya_voto = False
     if request.session.get("vecino_id"):
         vecino_id = request.session["vecino_id"]
         ya_voto = VotoProyecto.objects.filter(id_proyecto=proyecto, id_vecino_id=vecino_id).exists()
@@ -173,8 +213,10 @@ def detalle_proyecto(request, id_proyecto):
         "proyecto": proyecto,
         "votos_a_favor": votos_a_favor,
         "votos_en_contra": votos_en_contra,
+        "tiempo_restante": tiempo_restante,  # ← Importante
         "ya_voto": ya_voto
     })
+
 
 
 # ==============================================

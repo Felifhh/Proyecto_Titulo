@@ -22,7 +22,7 @@
 <script src="{% static 'js/mensaje.js' %}"></script>
 {% endif %}
 
-<div class="container mt-4">
+<div class="container mt-4" style="border: 0cap;">
   <div class="card bg-dark text-light border-secondary shadow-lg">
     {% if noticia.imagen %}
       <img src="{{ noticia.imagen.url }}" class="card-img-top" alt="Imagen de noticia">
@@ -52,4 +52,5 @@
     </div>
   </div>
 </div>
+<br>
 {% endblock %}

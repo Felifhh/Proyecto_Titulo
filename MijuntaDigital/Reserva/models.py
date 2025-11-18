@@ -10,7 +10,7 @@ class EspacioComunal(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     monto_hora = models.IntegerField(default=0)
-    imagen = models.ImageField(upload_to='espacios/', null=False, blank=False)
+    imagen = models.ImageField(upload_to='espacios/', null=True, blank=True)
     estado = models.CharField(max_length=10, choices=ESTADOS, default='Activo')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
@@ -27,6 +27,7 @@ class Reserva(models.Model):
         ('Aprobada', 'Aprobada'),
         ('Rechazada', 'Rechazada'),
         ('Cancelada', 'Cancelada'),
+        ('Activa', 'Activa'),
     ]
     id_reserva = models.AutoField(primary_key=True)
     id_vecino = models.ForeignKey(Vecino, on_delete=models.CASCADE, db_column='id_vecino')
@@ -38,7 +39,8 @@ class Reserva(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADOS, default='Pendiente')
     observacion = models.CharField(max_length=255, blank=True, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    total = models.IntegerField()
+    total = models.IntegerField(null=True, blank=True)
+
 
     class Meta:
         db_table = 'reserva'

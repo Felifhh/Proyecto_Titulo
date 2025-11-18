@@ -30,19 +30,24 @@ logger = logging.getLogger(__name__)
 # ==========================================================
 # CONFIGURACIÓN GEMINI
 # ==========================================================
-# Leer la API key desde variable de entorno o desde settings.py.
-# No dejemos claves hardcodeadas en el repositorio.
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", None)
+
+# Cargar API key desde entorno (.env)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Indicador global
+GEMINI_ENABLED = False
+
 if GEMINI_API_KEY:
     try:
+        # Configurar Gemini (seguro en settings.py)
+        import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
         GEMINI_ENABLED = True
-    except Exception:
+    except Exception as e:
         logger.exception("No se pudo configurar Gemini con la API key proporcionada.")
-        GEMINI_ENABLED = False
 else:
-    logger.warning("Gemini API key no encontrada en entorno ni en settings. Gemini deshabilitado; se usará fallback local.")
-    GEMINI_ENABLED = False
+    logger.warning("Gemini API key no encontrada. Gemini deshabilitado; se usará fallback local.")
+
 
 # Ruta a los KB locales
 KB_DIR = os.path.join(os.path.dirname(__file__), "kb")
@@ -189,7 +194,7 @@ def chatbot_api(request):
         if not espacio:
             return JsonResponse({"respuesta": "No pude identificar el espacio. Indica el nombre exacto del espacio (por ejemplo: 'Parque') o usa el id después de 'reservar'."})
         if not fecha or not hora_inicio or not hora_fin:
-            return JsonResponse({"respuesta": "Para reservar un espacio, debes escribir: 'reservar (nombre) (fecha) (hora inicio hasta hora fin)'"})
+            return JsonResponse({"respuesta": "Para reservar un espacio, debes escribir: 'reservar (nombre) (fecha) (hora inicio(00:00) hasta hora fin(00:00))'"})
 
         # comprobar conflictos
         conflict = _horario_conflict(espacio, fecha, hora_inicio, hora_fin)
@@ -218,7 +223,16 @@ def chatbot_api(request):
         try:
             response = iniciar_pago_reserva(request, vecino_id, tentative["espacio_id"], tentative["fecha"], tentative["hora_inicio"], tentative["hora_fin"])
             redirect_url = request.build_absolute_uri(reverse('chatbot_abrir_pago'))
-            return JsonResponse({"respuesta": f"He generado la página de pago y te la puedo abrir aquí: {redirect_url}"})
+            return JsonResponse({
+                                "respuesta": (
+                                    "<p>He generado la página de pago.</p>"
+                                    "<a href='{url}' "
+                                    "style='display:inline-block;padding:10px 18px;background:#007bff;"
+                                    "color:white;border-radius:6px;text-decoration:none;font-weight:bold;'>"
+                                    "Abrir aquí"
+                                    "</a>"
+                                ).format(url=redirect_url)
+                            })
         except Exception as e:
             logger.exception("Error iniciando pago desde chatbot: %s", e)
             return JsonResponse({"respuesta": f"No se pudo iniciar el pago: {e}"})

@@ -24,7 +24,7 @@ class Vecino(models.Model):
     telefono = models.CharField(max_length=20, blank=True, null=True)
     contrasena = models.CharField(max_length=255)
     fecha_registro = models.DateTimeField(auto_now_add=True)
-    id_rol = models.ForeignKey('Rol', on_delete=models.DO_NOTHING, db_column='id_rol')
+    id_rol = models.ForeignKey('Rol', on_delete=models.SET_NULL, null=True, db_column='id_rol')
     estado = models.CharField(max_length=15, default='Pendiente')
     foto = models.ImageField(upload_to='perfiles/', default='perfiles/default.png', blank=True, null=True)
     evidencia = models.FileField(upload_to='evidencias_vecinos/', null=True, blank=True)

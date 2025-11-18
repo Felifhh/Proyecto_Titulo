@@ -3,20 +3,14 @@ from Usuarios.models import Vecino
 
 
 class Documento(models.Model):
-    TIPOS = [
-        ('Acta', 'Acta'),
-        ('Estatuto', 'Estatuto'),
-        ('Reglamento', 'Reglamento'),
-        ('Oficio', 'Oficio'),
-    ]
 
     id_documento = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=200)
-    archivo = models.FileField(upload_to='documentos/')
+    tipo = models.CharField(max_length=200, default="Documento", null=True, blank=True)
+    archivo = models.FileField(upload_to='documentos/', null=True, blank=True)
     texto_extraido = models.TextField(blank=True, null=True)
     version = models.IntegerField(default=1)
-    fecha_subida = models.DateTimeField(auto_now_add=True)
+    fecha_subida = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     id_vecino = models.ForeignKey(Vecino, on_delete=models.CASCADE, db_column='id_vecino', null=True, blank=True)
 
     class Meta:

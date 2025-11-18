@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tz %}
 {% block title %}Panel de Auditoría{% endblock %}
 
 {% block content %}
@@ -93,7 +94,7 @@
                 <td>{% if e.id_vecino %}{{ e.id_vecino.nombre }}{% else %}Sistema{% endif %}</td>
                 <td>{{ e.accion }}</td>
                 <td>{{ e.resultado }}</td>
-                <td>{{ e.fecha_evento|date:"d/m/Y H:i:s" }}</td>
+                <td>{{ e.fecha_evento|localtime|date:"d/m/Y H:i:s" }}</td>
               </tr>
               {% empty %}
               <tr><td colspan="4" class="text-center text-muted">No hay registros para esta fecha.</td></tr>

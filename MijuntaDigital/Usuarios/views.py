@@ -46,20 +46,38 @@ def registro_vecino(request):
     """
     if request.method == "POST":
         form = RegistroVecinoForm(request.POST, request.FILES)
+
         if form.is_valid():
-            form.save()
+            vecino = form.save(commit=False)
+
+            # ASIGNAR ROL "Vecino" EXISTENTE EN BD
+            from Usuarios.models import Rol
+            try:
+                rol_vecino = Rol.objects.filter(nombre__iexact="vecino").first()
+                if not rol_vecino:
+                    rol_vecino = Rol.objects.create(nombre="vecino")
+            except Rol.DoesNotExist:
+                # Si no existe lo creamos UNA SOLA VEZ
+                rol_vecino = Rol.objects.create(nombre="vecino")
+
+            vecino.id_rol = rol_vecino
+            vecino.save()
+
             registrar_evento(request, "Registro de nuevo vecino", "Éxito")
             messages.success(request, "Registro enviado correctamente. Queda pendiente de validación por la directiva.")
             return redirect('usuarios_registro_ok')
+
         else:
             registrar_evento(request, "Intento de registro fallido", "Error en validación")
-            for field, errors in form.errors.items():
+            for _, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{error}")
+
     else:
         form = RegistroVecinoForm()
 
     return render(request, "Usuarios/registro.html", {"form": form})
+
 
 
 def registro_ok(request):
