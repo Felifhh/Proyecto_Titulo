@@ -516,3 +516,99 @@ def cambiar_contrasena(request):
         return redirect("home")
 
     return render(request, "Usuarios/cambiar_contrasena.html")
+
+def editar_perfil(request, id_vecino):
+    vecino = get_object_or_404(Vecino, pk=id_vecino)
+
+    # Seguridad
+    if request.session.get("vecino_id") != vecino.id_vecino:
+        messages.error(request, "No puedes editar el perfil de otro vecino.")
+        return redirect("home")
+
+    if request.method == "POST":
+        vecino.nombre = request.POST.get("nombre")
+        vecino.direccion = request.POST.get("direccion")
+        vecino.save()
+
+        registrar_evento(request, f"Modificó sus datos personales", "Éxito")
+        messages.success(request, "Información personal actualizada correctamente.")
+        return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+
+from django.db.models import Q
+
+def editar_contacto(request, id_vecino):
+    vecino = get_object_or_404(Vecino, pk=id_vecino)
+
+    # Seguridad
+    if request.session.get("vecino_id") != vecino.id_vecino:
+        messages.error(request, "No puedes editar los datos de contacto de otro vecino.")
+        return redirect("home")
+
+    if request.method == "POST":
+
+        nuevo_correo = request.POST.get("correo").strip().lower()
+        nuevo_telefono = request.POST.get("telefono")
+        nueva_direccion = request.POST.get("direccion")
+
+        # === VALIDACIÓN: CORREO YA REGISTRADO EN OTRO USUARIO ===
+        if Vecino.objects.filter(
+            Q(correo__iexact=nuevo_correo),
+            ~Q(id_vecino=vecino.id_vecino)  # excluir a sí mismo
+        ).exists():
+            messages.error(request, "El correo ingresado ya está registrado por otro vecino.")
+            return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        # === VALIDACIÓN: TELÉFONO DUPLICADO (si tu campo es único) ===
+        if nuevo_telefono:
+            if Vecino.objects.filter(
+                Q(telefono=nuevo_telefono),
+                ~Q(id_vecino=vecino.id_vecino)
+            ).exists():
+                messages.error(request, "El teléfono ingresado ya está en uso por otro vecino.")
+                return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        # === SI TODO ESTÁ OK, GUARDAR ===
+        vecino.correo = nuevo_correo
+        vecino.telefono = nuevo_telefono
+        vecino.direccion = nueva_direccion
+        vecino.save()
+
+        registrar_evento(request, "Actualización de datos de contacto", "Éxito")
+        messages.success(request, "Datos de contacto actualizados correctamente.")
+        return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+
+
+def cambiar_contrasena_perfil(request, id_vecino):
+    vecino = get_object_or_404(Vecino, pk=id_vecino)
+
+    if request.session.get("vecino_id") != vecino.id_vecino:
+        messages.error(request, "No puedes cambiar la contraseña de otro usuario.")
+        return redirect("home")
+
+    if request.method == "POST":
+        actual = request.POST.get("actual")
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        if not check_password(actual, vecino.contrasena):
+            messages.error(request, "La contraseña actual no es correcta.")
+            return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        if nueva != confirmar:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        vecino.contrasena = make_password(nueva)
+        vecino.save()
+
+        registrar_evento(request, "Cambio de contraseña desde perfil", "Éxito")
+
+        notificar_n8n("contrasena_actualizada", {
+            "nombre": vecino.nombre,
+            "correo": vecino.correo
+        })
+
+        messages.success(request, "Contraseña actualizada correctamente.")
+        return redirect("perfil_vecino", id_vecino=vecino.id_vecino)

@@ -13,6 +13,10 @@ urlpatterns = [
     path("recuperar/", views.solicitar_recuperacion, name="solicitar_recuperacion"),
     path("verificar-codigo/", views.verificar_codigo, name="verificar_codigo"),
     path("cambiar-contrasena/", views.cambiar_contrasena, name="cambiar_contrasena"),
+    path("perfil/<int:id_vecino>/editar/", views.editar_perfil, name="editar_perfil"),
+    path("perfil/<int:id_vecino>/contacto/", views.editar_contacto, name="editar_contacto"),
+    path("perfil/<int:id_vecino>/password/", views.cambiar_contrasena_perfil, name="cambiar_contrasena_perfil"),
+
 
     path('directiva/', views.vista_directiva, name='Directiva'),
 

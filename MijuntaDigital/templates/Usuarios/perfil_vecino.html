@@ -5,15 +5,13 @@
 {% block content %}
 
 {% if messages %}
-<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+<div class="container mt-4 d-flex justify-content-center">
   <div class="col-md-8">
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
       role="alert">
       <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-
-      <!-- Barra de progreso -->
       <div class="alert-progress"></div>
     </div>
     {% endfor %}
@@ -27,10 +25,9 @@
   <!-- CARD PRINCIPAL -->
   <div class="card shadow p-4" style="background-color: var(--color-bg-secondary); border: 0cap var(--color-border);">
 
-    <div class="row" >
+    <div class="row">
       <div class="col-md-3 text-center">
 
-        <!-- Imagen -->
         {% if perfil.foto %}
           <img id="preview_foto" src="{{ perfil.foto.url }}" class="rounded-circle img-fluid mb-3 shadow-sm"
                width="140" height="140" style="object-fit: cover;">
@@ -39,7 +36,6 @@
                width="140" height="140">
         {% endif %}
 
-        <!-- Cambiar foto -->
         {% if usuario_sesion.id_vecino == perfil.id_vecino %}
         <form method="post" enctype="multipart/form-data" class="mt-2">
           {% csrf_token %}
@@ -56,29 +52,19 @@
 
       </div>
 
-      <!-- INFORMACIÓN PERSONAL -->
       <div class="col-md-9">
         <h5 class="mb-3" style="color: var(--color-primary);">Datos Personales</h5>
 
         <ul class="list-group mb-3">
+          <li class="list-group-item bg-transparent border-secondary text-white"><strong>RUN:</strong> {{ perfil.run }}</li>
+          <li class="list-group-item bg-transparent border-secondary text-white"><strong>Dirección:</strong> {{ perfil.direccion }}</li>
+          <li class="list-group-item bg-transparent border-secondary text-white"><strong>Correo:</strong> {{ perfil.correo }}</li>
+          <li class="list-group-item bg-transparent border-secondary text-white"><strong>Teléfono:</strong> {{ perfil.telefono }}</li>
           <li class="list-group-item bg-transparent border-secondary text-white">
-            <strong class="text-white">RUN:</strong> {{ perfil.run }}
-          </li>
-          <li class="list-group-item bg-transparent border-secondary text-white">
-            <strong class="text-white">Dirección:</strong> {{ perfil.direccion }}
-          </li>
-          <li class="list-group-item bg-transparent border-secondary text-white">
-            <strong class="text-white">Correo:</strong> {{ perfil.correo }}
-          </li>
-          <li class="list-group-item bg-transparent border-secondary text-white">
-            <strong class="text-white">Teléfono:</strong> {{ perfil.telefono }}
-          </li>
-          <li class="list-group-item bg-transparent border-secondary text-white">
-            <strong class="text-white">Fecha de registro:</strong> {{ perfil.fecha_registro|date:"d/m/Y" }}
+            <strong>Fecha registro:</strong> {{ perfil.fecha_registro|date:"d/m/Y" }}
           </li>
         </ul>
 
-        <!-- ACTIVIDAD RECIENTE -->
         <h5 class="mb-2" style="color: var(--color-primary);">Actividad Reciente</h5>
 
         <ul class="list-group">
@@ -87,9 +73,7 @@
               Certificado {{ c.tipo }} — {{ c.fecha_emision|date:"d/m/Y H:i" }}
             </li>
           {% empty %}
-            <li class="list-group-item bg-transparent border-secondary text-white">
-              No tiene certificados recientes.
-            </li>
+            <li class="list-group-item bg-transparent border-secondary text-white">No tiene certificados recientes.</li>
           {% endfor %}
 
           {% for s in solicitudes %}
@@ -109,39 +93,167 @@
     </div>
   </div>
 
-  <!-- CARD TOTAL RECAUDADO (CENTRADA) -->
+
+  <!-- ============================= -->
+  <!--     NUEVO BLOQUE DE OPCIONES -->
+  <!-- ============================= -->
+  <div class="card shadow p-4 mt-4"
+       style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+
+    <h5 class="mb-3" style="color: var(--color-primary);">
+      <i class="bi bi-gear-fill"></i> Opciones de tu Cuenta
+    </h5>
+
+    <ul class="list-group">
+
+      <li class="list-group-item bg-transparent border-secondary text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-person-lines-fill me-2"></i> Editar información personal</span>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">Editar</button>
+      </li>
+
+      <li class="list-group-item bg-transparent border-secondary text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-envelope-at-fill me-2"></i> Actualizar contacto</span>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalEditarContacto">Actualizar</button>
+      </li>
+
+      <li class="list-group-item bg-transparent border-secondary text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-shield-lock-fill me-2"></i> Cambiar contraseña</span>
+        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalCambiarPass">Cambiar</button>
+      </li>
+
+    </ul>
+
+  </div>
+
+
+  <!-- ============================= -->
+  <!--     TOTAL RECAUDADO -->
+  <!-- ============================= -->
   <div class="d-flex justify-content-center mt-4">
     <div class="card shadow p-4"
          style="width: 380px; background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); text-align:center;">
 
-      <h4 class="mb-3" style="color: var(--color-primary);">
-        <i class="bi bi-cash-coin"></i> Total Recaudado
-      </h4>
+      <h4 class="mb-3" style="color: var(--color-primary);"><i class="bi bi-cash-coin"></i> Total Recaudado</h4>
 
       <div class="p-3 rounded"
            style="background-color: var(--color-bg-primary); border: 1px solid var(--color-border);">
 
-          <small class="text-white">Gracias al apoyo de todos los vecinos hemos recaudado:</small>
-        <h2 class="fw-bold text-success mb-0">
-          ${{ total_recaudado|floatformat:0 }}
-        </h2>
-
+        <small class="text-white">Gracias al apoyo de todos los vecinos hemos recaudado:</small>
+        <h2 class="fw-bold text-success mb-0">${{ total_recaudado|floatformat:0 }}</h2>
 
       </div>
 
     </div>
   </div>
-  <br>
 
 </div>
 
-<!-- SCRIPT PREVISUALIZACIÓN -->
+
+<!-- ============================= -->
+<!--       MODAL EDITAR PERFIL     -->
+<!-- ============================= -->
+<div class="modal fade" id="modalEditarPerfil" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'editar_perfil' perfil.id_vecino %}">
+      {% csrf_token %}
+      <div class="modal-content" style="background: #1e1e1e; color:white;">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar información personal</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <label>Nombre</label>
+          <input type="text" name="nombre" class="form-control" value="{{ perfil.nombre }}" required>
+
+          <label class="mt-2">Dirección</label>
+          <input type="text" name="direccion" class="form-control" value="{{ perfil.direccion }}" required>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= -->
+<!--     MODAL EDITAR CONTACTO     -->
+<!-- ============================= -->
+<div class="modal fade" id="modalEditarContacto" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'editar_contacto' perfil.id_vecino %}">
+      {% csrf_token %}
+      <div class="modal-content" style="background: #1e1e1e; color:white;">
+        <div class="modal-header">
+          <h5 class="modal-title">Actualizar datos de contacto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <label>Correo electrónico</label>
+          <input type="email" name="correo" class="form-control" value="{{ perfil.correo }}" required>
+
+          <label class="mt-2">Teléfono</label>
+          <input type="text" name="telefono" class="form-control" value="{{ perfil.telefono }}">
+
+          <label class="mt-2">Dirección</label>
+          <input type="text" name="direccion" class="form-control" value="{{ perfil.direccion }}">
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ============================= -->
+<!--     MODAL CAMBIAR CONTRASEÑA  -->
+<!-- ============================= -->
+<div class="modal fade" id="modalCambiarPass" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'cambiar_contrasena_perfil' perfil.id_vecino %}">
+      {% csrf_token %}
+      <div class="modal-content" style="background: #1e1e1e; color:white;">
+        <div class="modal-header">
+          <h5 class="modal-title">Cambiar contraseña</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <label>Contraseña actual</label>
+          <input type="password" name="actual" class="form-control" required>
+
+          <label class="mt-2">Nueva contraseña</label>
+          <input type="password" name="nueva" class="form-control" required>
+
+          <label class="mt-2">Confirmar nueva contraseña</label>
+          <input type="password" name="confirmar" class="form-control" required>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">Actualizar</button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- PREVISUALIZAR FOTO -->
 <script>
 function previewAndSubmit(input) {
     const [file] = input.files;
     if (file) {
-        const preview = document.getElementById('preview_foto');
-        preview.src = URL.createObjectURL(file);
+        document.getElementById('preview_foto').src = URL.createObjectURL(file);
         setTimeout(() => input.form.submit(), 400);
     }
 }
