@@ -1,19 +1,24 @@
 from django.conf import settings
-import os
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(settings.BASE_DIR, "mijuntadigital-497d656bf8e0.json")
+import json
 from google.cloud import vision
 import io
+import os
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from MijuntaDigital.settings import get_gcp_credentials
 from Usuarios.decorators import require_role
 from .models import Documento
 from .forms import DocumentoForm
 from django.db.models import Q
+import requests
+
+from google.cloud import vision
 
 
+
+# ===============================================
 
 @require_role(["presidente", "secretario", "tesorero", "vecino"])
 def lista_documentos(request):
@@ -85,28 +90,29 @@ def detalle_documento(request, id_documento):
 def aplicar_ocr(documento):
     """
     Aplica OCR usando Google Cloud Vision API.
-    Compatible con imágenes JPG, PNG y PDFs (limitado).
     """
     try:
-        client = vision.ImageAnnotatorClient()
+        # 1) Cargar credenciales desde Supabase
+        creds = get_gcp_credentials()
+        if not creds:
+            raise Exception("No se pudieron cargar credenciales GCP.")
+
+        # 2) Crear cliente de Google Vision usando tus credenciales
+        client = vision.ImageAnnotatorClient.from_service_account_info(creds)
+
         file_path = documento.archivo.path
-        extension = file_path.lower().split('.')[-1]
 
         with io.open(file_path, 'rb') as image_file:
             content = image_file.read()
 
-        # Cargar imagen en el cliente
         image = vision.Image(content=content)
-
-        # Detectar texto
         response = client.text_detection(image=image)
         texts = response.text_annotations
 
         if texts:
-            texto_extraido = texts[0].description.strip()
-            documento.texto_extraido = texto_extraido
+            documento.texto_extraido = texts[0].description.strip()
         else:
-            documento.texto_extraido = "(No se detectó texto legible)"
+            documento.texto_extraido = "(No se detectó texto)"
 
         documento.save()
 
@@ -117,3 +123,4 @@ def aplicar_ocr(documento):
         print(f"[Google OCR ERROR] {e}")
         documento.texto_extraido = f"(Error OCR: {e})"
         documento.save()
+
