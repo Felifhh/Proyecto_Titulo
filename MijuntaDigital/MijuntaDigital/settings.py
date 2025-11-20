@@ -265,10 +265,13 @@ DATABASES = {
 
 
 # ==============================================
-# GEMINI API KEY (desde .env)
+# GEMINI API KEY (desde Supabase env-secrets.json)
 # ==============================================
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_API_KEY = SECRET_GEMINI_API_KEY
 GEMINI_ENABLED = bool(GEMINI_API_KEY)
+
+print("Gemini Enabled:", GEMINI_ENABLED)
+print("Gemini API:", GEMINI_API_KEY[:10] + "...")
 
 
 

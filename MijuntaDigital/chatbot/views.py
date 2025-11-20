@@ -22,31 +22,34 @@ from Reserva.views import iniciar_pago_reserva
 from django.urls import reverse
 from django.shortcuts import render
 from django.utils.html import escape
+from MijuntaDigital.settings import SECRET_GEMINI_API_KEY
 
 logger = logging.getLogger(__name__)
 
 
 
-# ==========================================================
-# CONFIGURACIÓN GEMINI
-# ==========================================================
 
-# Cargar API key desde entorno (.env)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# ==========================================================
+# CONFIGURACIÓN GEMINI (desde Supabase env-secrets.json)
+# ==========================================================
+import google.generativeai as genai
 
-# Indicador global
+GEMINI_API_KEY = SECRET_GEMINI_API_KEY
 GEMINI_ENABLED = False
 
-if GEMINI_API_KEY:
+if GEMINI_API_KEY and GEMINI_API_KEY.strip():
     try:
-        # Configurar Gemini (seguro en settings.py)
-        import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
         GEMINI_ENABLED = True
+        print(f"✔ Gemini habilitado con API: {GEMINI_API_KEY[:10]}...")
     except Exception as e:
-        logger.exception("No se pudo configurar Gemini con la API key proporcionada.")
+        print("❌ Error configurando Gemini:", e)
+        GEMINI_ENABLED = False
 else:
-    logger.warning("Gemini API key no encontrada. Gemini deshabilitado; se usará fallback local.")
+    print("⚠ No se encontró GEMINI_API_KEY; se usará fallback local.")
+
+
+
 
 
 # Ruta a los KB locales

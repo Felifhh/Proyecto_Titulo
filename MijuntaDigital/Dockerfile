@@ -1,33 +1,30 @@
-# Imagen base ligera
+# Imagen base oficial de Python
 FROM python:3.13-slim
 
-# Variables para evitar problemas
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Evitar buffering de logs
+ENV PYTHONUNBUFFERED 1
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Crear directorio de trabajo
 WORKDIR /app
-
-# Dependencias necesarias para compilar mysqlclient contra MariaDB
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    pkg-config \
-    libmariadb-dev-compat \
-    libmariadb-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements
 COPY requirements.txt /app/
 
 # Instalar dependencias Python
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copiar todo el proyecto
+# Copiar el proyecto entero
 COPY . /app/
 
-# Exponer puerto Django
+# Exponer el puerto de Django
 EXPOSE 8000
 
-# Comando de inicio
+# Comando por defecto (runserver)
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
