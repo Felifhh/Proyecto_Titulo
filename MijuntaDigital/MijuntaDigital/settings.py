@@ -55,7 +55,7 @@ def load_supabase_connection():
     Carga SUPABASE_URL y SUPABASE_KEY desde n8n.
     """
     try:
-        url = "https://felifhhh.app.n8n.cloud/webhook/get-supabase-credentials"
+        url = "https://felifhhhh.app.n8n.cloud/webhook/get-supabase-credentials"
         response = requests.get(url, timeout=10)
 
 

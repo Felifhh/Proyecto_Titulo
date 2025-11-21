@@ -35,7 +35,7 @@ def cargar_imagen_base64(path):
 # ==============================================================
 
 def notificar_n8n(evento, datos):
-    webhook_url = "https://felifhhh.app.n8n.cloud/webhook/a2455f35-9e3c-4833-91d5-bfbc40ca9cb6"
+    webhook_url = "https://felifhhhh.app.n8n.cloud/webhook/Reporte-PDF"
     print("ENVIANDO A N8N:", webhook_url)
     try:
         requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)

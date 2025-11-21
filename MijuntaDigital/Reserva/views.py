@@ -66,7 +66,7 @@ def iniciar_pago_reserva(request, vecino_id, espacio_id, fecha_str, hora_inicio_
     return response
 
 def notificar_n8n(evento, datos):
-    webhook_url = "https://felifhhh.app.n8n.cloud/webhook/9a0798f9-34e0-4e76-b7c8-874c7f636a7a"  # URL definitiva
+    webhook_url = "https://felifhhhh.app.n8n.cloud/webhook/Correo-Mensaje"  # URL definitiva
     try:
         requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
         print(f" Evento '{evento}' enviado correctamente a n8n.")
