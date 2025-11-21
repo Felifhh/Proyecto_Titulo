@@ -1,0 +1,11 @@
+==============================================
+	Correo Invitado Para la BD
+=============================================
+
+------- Correo ---------
+	
+supabaseinvitadofelipe@gmail.com
+
+----- Contraseña -------
+
+InvitadoSupa.1290
