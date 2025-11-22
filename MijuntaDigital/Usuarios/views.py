@@ -16,11 +16,6 @@ from Reserva.models import Reserva
 from pagos.models import Transaccion
 from Usuarios.decorators import require_role
 import requests
-<<<<<<< HEAD
-
-def notificar_n8n(evento, datos):
-    webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
-=======
 from django.db.models import Sum
 
 from django.utils.crypto import get_random_string
@@ -31,7 +26,6 @@ from datetime import timedelta
 
 def notificar_n8n(evento, datos):
     webhook_url = "https://felifhhh.app.n8n.cloud/webhook/9a0798f9-34e0-4e76-b7c8-874c7f636a7a"  # URL definitiva
->>>>>>> Felipe_branchh
     try:
         requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
         print(f" Evento '{evento}' enviado correctamente a n8n.")
@@ -48,24 +42,12 @@ def notificar_n8n(evento, datos):
 def registro_vecino(request):
     """
     Permite que un vecino se registre en el sistema.
-<<<<<<< HEAD
-    El registro queda en estado "Pendiente" hasta ser aprobado por el Presidente.
-    Muestra mensajes de validación personalizados según los validadores.
-=======
     El registro queda en estado "Pendiente" hasta ser aprobado por la Directiva.
->>>>>>> Felipe_branchh
     """
     if request.method == "POST":
         form = RegistroVecinoForm(request.POST, request.FILES)
 
         if form.is_valid():
-<<<<<<< HEAD
-            form.save()
-            messages.success(
-                request,
-                "Registro enviado correctamente. Queda pendiente de validación por la directiva."
-            )
-=======
             vecino = form.save(commit=False)
 
             # ASIGNAR ROL "Vecino" EXISTENTE EN BD
@@ -83,25 +65,14 @@ def registro_vecino(request):
 
             registrar_evento(request, "Registro de nuevo vecino", "Éxito")
             messages.success(request, "Registro enviado correctamente. Queda pendiente de validación por la directiva.")
->>>>>>> Felipe_branchh
             return redirect('usuarios_registro_ok')
 
         else:
-<<<<<<< HEAD
-            # 🧠 Si hay errores específicos, mostrar cada uno
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{error}")
-            # Si no hay errores concretos (caso raro), mensaje genérico
-            if not form.errors:
-                messages.error(request, "Verifica los datos ingresados. Hay errores en el formulario.")
-=======
             registrar_evento(request, "Intento de registro fallido", "Error en validación")
             for _, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{error}")
 
->>>>>>> Felipe_branchh
     else:
         form = RegistroVecinoForm()
 
@@ -168,21 +139,13 @@ def aprobar_vecino(request, pk):
     vecino.estado = "Activo"
     vecino.save()
 
-<<<<<<< HEAD
-    #  Notificar a n8n
-=======
     registrar_evento(request, f"Aprobación de vecino {vecino.nombre}", "Éxito")
 
->>>>>>> Felipe_branchh
     notificar_n8n("cuenta_aprobada", {
         "nombre": vecino.nombre,
         "correo": vecino.correo,
         "run": vecino.run
     })
-<<<<<<< HEAD
-
-=======
->>>>>>> Felipe_branchh
     messages.success(request, f"{vecino.nombre} ha sido aprobado correctamente.")
     return redirect("usuarios_pendientes")
 
@@ -194,21 +157,13 @@ def rechazar_vecino(request, pk):
     vecino.estado = "Rechazado"
     vecino.save()
 
-<<<<<<< HEAD
-    #  Notificar a n8n
-=======
     registrar_evento(request, f"Rechazo de vecino {vecino.nombre}", "Éxito")
 
->>>>>>> Felipe_branchh
     notificar_n8n("cuenta_rechazada", {
         "nombre": vecino.nombre,
         "correo": vecino.correo,
         "run": vecino.run
     })
-<<<<<<< HEAD
-
-=======
->>>>>>> Felipe_branchh
     messages.warning(request, f"{vecino.nombre} ha sido rechazado.")
     return redirect("usuarios_pendientes")
 
@@ -285,10 +240,6 @@ def perfil_vecino(request, id_vecino):
     certificados = Certificado.objects.filter(id_vecino=perfil).order_by("-fecha_emision")[:5]
     solicitudes = Solicitud.objects.filter(id_vecino=perfil).order_by("-fecha_creacion")[:5]
     reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
-<<<<<<< HEAD
-
-=======
->>>>>>> Felipe_branchh
 
 
 # ==============================================

@@ -5,19 +5,6 @@
 
 
 {% block content %}
-<<<<<<< HEAD
-  <!-- MENSAJES FLASH -->
-{% if messages %}
-<div class="container mt-4 d-flex justify-content-center">
-  <div class="col-md-8">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center" 
-         style="font-size: 0.95rem; border-radius: 10px;" 
-         role="alert">
-      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"
-              style="filter: invert(1); opacity: 0.9;"></button>
-=======
 <!-- MENSAJES FLASH -->
 {% if messages %}
 <div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
@@ -30,15 +17,11 @@
 
       <!-- Barra de progreso -->
       <div class="alert-progress"></div>
->>>>>>> Felipe_branchh
     </div>
     {% endfor %}
   </div>
 </div>
-<<<<<<< HEAD
-=======
 <script src="{% static 'js/mensaje.js' %}"></script>
->>>>>>> Felipe_branchh
 {% endif %}
 
 
@@ -92,10 +75,6 @@
 <!-- Noticias -->
 <section class="py-5" style="border: 0cap;">
   <div class="container" style="border: 0cap;">
-<<<<<<< HEAD
-    <br>
-=======
->>>>>>> Felipe_branchh
     <h2 class="text-center mb-4 text-primary">Noticias y Comunicados</h2>
 
     <div class="row g-4 justify-content-center">
@@ -114,34 +93,10 @@
           </div>
         </div>
       </div>
-<<<<<<< HEAD
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <img src="{% static 'img/noticia2.jpg' %}" class="card-img-top" alt="Noticia 2">
-          <div class="card-body">
-            <h5 class="card-title">Campaña de reciclaje</h5>
-            <p class="card-text">Participa en la jornada de reciclaje este sábado a las 10:00 hrs en la sede vecinal.
-            </p>
-            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <img src="{% static 'img/noticia3.jpg' %}" class="card-img-top" alt="Noticia 3">
-          <div class="card-body">
-            <h5 class="card-title">Nueva cancha techada</h5>
-            <p class="card-text">Gracias a la gestión vecinal, se aprobó la construcción de una cancha multiuso techada.
-            </p>
-            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
-          </div>
-        </div>
-=======
       {% endfor %}
       {% else %}
       <div class="col-12 text-center">
         <p class="text-muted">No hay noticias publicadas aún.</p>
->>>>>>> Felipe_branchh
       </div>
       {% endif %}
     </div>
