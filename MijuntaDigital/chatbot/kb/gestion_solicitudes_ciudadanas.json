@@ -1,0 +1,5 @@
+{
+  "module": "gestion_solicitudes_ciudadanas",
+  "title": "Gestión de Solicitudes Ciudadanas",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Solicitudes ciudadanas'.\n\nDescripción: listado de solicitudes enviadas por los vecinos relacionadas con problemas comunitarios o necesidades específicas.\n\nAcciones: el directorio puede cambiar el estado de 'En Proceso' a 'Resuelta' o 'Rechazada'. Cada cambio de estado debe registrarse en la auditoría."
+}

@@ -86,9 +86,9 @@ class RegistroVecinoForm(forms.ModelForm):
 
         # Asignar rol "Vecino"
         try:
-            rol_vecino = Rol.objects.get(nombre='Vecino')
+            rol_vecino = Rol.objects.get(nombre='vecino')
         except Rol.DoesNotExist:
-            rol_vecino = Rol.objects.create(nombre='Vecino')
+            rol_vecino = Rol.objects.create(nombre='vecino')
         obj.id_rol = rol_vecino
 
         # Hashear contraseña

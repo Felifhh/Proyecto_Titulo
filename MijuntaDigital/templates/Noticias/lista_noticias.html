@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Noticias{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container mt-4" style="border: 0cap;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-light"><i class="fa-regular fa-newspaper me-2"></i>Noticias</h2>
+    {% if request.session.vecino_rol and request.session.vecino_rol|lower in "presidente,secretario,tesorero" %}
+      <a href="{% url 'crear_noticia' %}" class="btn btn-success">
+        <i class="fa-solid fa-plus me-1"></i> Nueva Noticia
+      </a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="d-flex justify-content-end mb-3">
+    <input type="text" name="q" class="form-control w-25 me-2" placeholder="Buscar noticia..." value="{{ q }}">
+    <button type="submit" class="btn btn-outline-primary">Buscar</button>
+  </form>
+
+  <div class="row">
+    {% for n in noticias %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+        {% if n.imagen %}
+          <img src="{{ n.imagen.url }}" class="card-img-top" alt="Imagen de noticia">
+        {% endif %}
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title text-info">{{ n.titulo }}</h5>
+            <p class="card-text small">{{ n.contenido|truncatewords:20 }}</p>
+            {% if n.link %}
+              <a href="{{ n.link }}" target="_blank" class="text-primary small"><i class="fa-solid fa-link me-1"></i> Enlace</a>
+            {% endif %}
+          </div>
+          <a href="{% url 'detalle_noticia' n.id_noticia %}" class="btn btn-outline-info btn-sm mt-2">
+  <i class="fa-solid fa-eye me-1"></i> Ver detalle
+</a>
+          <p class="text-muted small mt-2">Publicado el {{ n.fecha_publicacion|date:"d/m/Y H:i" }}</p>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-warning text-center">No hay noticias publicadas.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

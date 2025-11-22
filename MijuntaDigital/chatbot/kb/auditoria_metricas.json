@@ -1,0 +1,5 @@
+{
+  "module": "auditoria_metricas",
+  "title": "Auditoría y Métricas",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Auditoría y métricas'.\n\nDescripción: muestra registros históricos del sistema, incluyendo acciones de usuarios y transacciones realizadas.\n\nFunciones: tabla de auditoría, tabla de transacciones Webpay, métricas visuales como gráficos de actividad, y opción para generar un reporte semanal descargable."
+}

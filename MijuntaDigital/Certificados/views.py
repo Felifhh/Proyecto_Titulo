@@ -13,9 +13,11 @@ from django.shortcuts import get_object_or_404
 import requests
 from transbank.webpay.webpay_plus.transaction import Transaction
 from django.urls import reverse
+from Usuarios.decorators import require_role
+from Auditoria.utils import registrar_evento
 
 def notificar_n8n(evento, datos):
-    webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
+    webhook_url = "https://felifhhhh.app.n8n.cloud/webhook/Correo-Mensaje"  # URL definitiva
     try:
         requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
         print(f" Evento '{evento}' enviado correctamente a n8n.")
@@ -23,6 +25,9 @@ def notificar_n8n(evento, datos):
         print(f" Error enviando evento a n8n: {e}")
 
 
+# ========================================================
+# SOLICITAR CERTIFICADO (Vecino)
+# ========================================================
 def solicitar_certificado(request):
     vecino_id = request.session.get("vecino_id")
     if not vecino_id:
@@ -33,37 +38,20 @@ def solicitar_certificado(request):
     ahora = timezone.now()
     DURACION_CERTIFICADO = timedelta(days=30)
 
-    #  Buscar certificado existente
+    # Verificar certificado vigente
     cert_existente = Certificado.objects.filter(
-        id_vecino=vecino,
-        tipo="Residencia"
+        id_vecino=vecino, tipo="Residencia"
     ).order_by('-fecha_emision').first()
 
-    #  Si ya tiene un certificado vigente
     if cert_existente and cert_existente.estado == "Emitido" and cert_existente.fecha_emision:
         if cert_existente.fecha_emision + DURACION_CERTIFICADO > ahora:
             messages.info(request, "Ya tienes un certificado vigente emitido hace menos de 30 días.")
-            return render(
-                request,
-                "Certificados/certificado_detalle.html",
-                {"certificado": cert_existente, "vecino": vecino}
-            )
+            return render(request, "Certificados/certificado_detalle.html", {"certificado": cert_existente, "vecino": vecino})
 
-    #  Si tiene una solicitud pendiente
     if Certificado.objects.filter(id_vecino=vecino, tipo="Residencia", estado="Pendiente").exists():
-        messages.warning(request, "Ya tienes una solicitud pendiente de revisión.")
+        messages.warning(request, "Ya tienes una solicitud pendiente.")
         return redirect("mis_certificados")
 
-    #  Si tenía uno vencido → eliminar QR y registro
-    if cert_existente and cert_existente.estado == "Emitido":
-        if cert_existente.qr_code:
-            old_path = cert_existente.qr_code.replace('/media/', '').replace('\\', '/')
-            full_path = os.path.join(settings.MEDIA_ROOT, old_path)
-            if os.path.isfile(full_path):
-                os.remove(full_path)
-        cert_existente.delete()
-
-    #  Si se envía el formulario → redirigir a Webpay antes de crear el registro
     if request.method == "POST":
         form = SolicitudCertificadoForm(request.POST)
         if form.is_valid():
@@ -76,7 +64,6 @@ def solicitar_certificado(request):
             tx.configure_for_testing()
             response = tx.create(buy_order, session_id, amount, return_url)
 
-            # Guardamos datos temporales en sesión (aún no se crea el certificado)
             request.session["certificado_pago"] = {
                 "vecino_id": vecino.id_vecino, 
                 "tipo": "Residencia",
@@ -84,24 +71,28 @@ def solicitar_certificado(request):
                 "token": response["token"],
             }
 
-            return render(request, "pagos/iniciar_pago.html", {
-                "url": response["url"],
-                "token": response["token"],
-            })
+            registrar_evento(request, f"Solicitud de certificado de residencia iniciada (pago pendiente)", "Éxito")
+
+            return render(request, "pagos/iniciar_pago.html", {"url": response["url"], "token": response["token"]})
     else:
         form = SolicitudCertificadoForm()
 
     return render(request, "Certificados/solicitar_certificado.html", {"form": form})
 
 
-from Usuarios.decorators import require_role
 
+# ========================================================
+# REVISAR CERTIFICADOS (Directiva)
+# ========================================================
 @require_role(['presidente', 'secretario', 'tesorero'])
 def revisar_certificados(request):
     certificados = Certificado.objects.filter(tipo="Residencia").order_by('-id_certificado')
     return render(request, "Certificados/revisar_certificados.html", {"certificados": certificados})
 
 
+# ========================================================
+# APROBAR CERTIFICADO
+# ========================================================
 @require_role(['presidente', 'secretario', 'tesorero'])
 def aprobar_certificado(request, id_certificado):
     cert = get_object_or_404(Certificado, pk=id_certificado)
@@ -110,7 +101,6 @@ def aprobar_certificado(request, id_certificado):
         messages.warning(request, "Este certificado ya fue procesado.")
         return redirect("revisar_certificados")
 
-    # Generar folio y QR
     folio = generar_folio()
     qr_rel_path = generar_qr(folio)
     qr_url = f"{settings.MEDIA_URL}{qr_rel_path}"
@@ -121,7 +111,8 @@ def aprobar_certificado(request, id_certificado):
     cert.fecha_emision = timezone.now()
     cert.save()
 
-    #  Notificar a n8n
+    registrar_evento(request, f"Aprobación del certificado de residencia (Folio: {folio})", "Éxito")
+
     vecino = cert.id_vecino
     notificar_n8n("documento_aceptado", {
         "nombre": vecino.nombre,
@@ -132,6 +123,60 @@ def aprobar_certificado(request, id_certificado):
     messages.success(request, f"Certificado de {vecino.nombre} emitido correctamente.")
     return redirect("revisar_certificados")
 
+
+# ========================================================
+# RECHAZAR CERTIFICADO
+# ========================================================
+@require_role(['presidente', 'secretario', 'tesorero'])
+def rechazar_certificado(request, id_certificado):
+    cert = get_object_or_404(Certificado, pk=id_certificado)
+
+    if cert.estado != "Pendiente":
+        messages.warning(request, "Este certificado ya fue procesado.")
+        return redirect("revisar_certificados")
+
+    cert.estado = "Rechazado"
+    cert.fecha_emision = timezone.now()
+    cert.save()
+
+    registrar_evento(request, f"Rechazo de certificado de residencia del vecino '{cert.id_vecino.nombre}'", "Éxito")
+
+    vecino = cert.id_vecino
+    notificar_n8n("documento_rechazado", {
+        "nombre": vecino.nombre,
+        "correo": vecino.correo,
+        "run": vecino.run
+    })
+
+    messages.error(request, f"Solicitud de {vecino.nombre} rechazada.")
+    return redirect("revisar_certificados")
+
+
+# ========================================================
+# MIS CERTIFICADOS (Vecino)
+# ========================================================
+def mis_certificados(request):
+    if not request.session.get("vecino_id"):
+        messages.error(request, "Debes iniciar sesión para ver tus certificados.")
+        return redirect("home")
+
+    vecino = get_object_or_404(Vecino, pk=request.session["vecino_id"])
+    certificados = Certificado.objects.filter(id_vecino=vecino, tipo="Residencia").order_by('-id_certificado')
+
+    return render(request, "Certificados/mis_certificados.html", {"certificados": certificados})
+
+
+# ========================================================
+# VER CERTIFICADO
+# ========================================================
+def ver_certificado(request, id_certificado):
+    cert = get_object_or_404(Certificado, pk=id_certificado)
+    if cert.estado != "Emitido":
+        messages.error(request, "Tu certificado aún no ha sido emitido por la directiva.")
+        return redirect("mis_certificados")
+
+    registrar_evento(request, f"Visualización del certificado (Folio: {cert.folio})", "Éxito")
+    return render(request, "Certificados/ver_certificado.html", {"certificado": cert})
 
 @require_role(['presidente', 'secretario', 'tesorero'])
 def rechazar_certificado(request, id_certificado):

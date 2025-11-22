@@ -4,6 +4,27 @@
 {% block title %}Solicitar Certificado de Residencia{% endblock %}
 
 {% block content %}
+<<<<<<< HEAD
+=======
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+>>>>>>> Felipe_branchh
 <div class="container py-5">
   <h3 class="text-center text-info mb-4">
     <i class="fa-solid fa-file-circle-check me-2"></i> Solicitud de Certificado de Residencia

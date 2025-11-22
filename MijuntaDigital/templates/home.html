@@ -5,6 +5,7 @@
 
 
 {% block content %}
+<<<<<<< HEAD
   <!-- MENSAJES FLASH -->
 {% if messages %}
 <div class="container mt-4 d-flex justify-content-center">
@@ -16,10 +17,28 @@
       <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"
               style="filter: invert(1); opacity: 0.9;"></button>
+=======
+<!-- MENSAJES FLASH -->
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+>>>>>>> Felipe_branchh
     </div>
     {% endfor %}
   </div>
 </div>
+<<<<<<< HEAD
+=======
+<script src="{% static 'js/mensaje.js' %}"></script>
+>>>>>>> Felipe_branchh
 {% endif %}
 
 
@@ -57,7 +76,7 @@
       </div>
 
       <div class="col-md-3 col-6 text-center">
-        <a href="{% url 'proyectos_todos' %}" class="card shadow-sm h-100 text-decoration-none text-dark">
+        <a href="{% url 'proyectos_inicio' %}" class="card shadow-sm h-100 text-decoration-none text-dark">
           <div class="card-body">
             <i class="fas fa-lightbulb fa-3x mb-3 text-primary"></i>
             <h5>Proyectos Vecinales</h5>
@@ -73,19 +92,29 @@
 <!-- Noticias -->
 <section class="py-5" style="border: 0cap;">
   <div class="container" style="border: 0cap;">
+<<<<<<< HEAD
     <br>
+=======
+>>>>>>> Felipe_branchh
     <h2 class="text-center mb-4 text-primary">Noticias y Comunicados</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <img src="{% static 'img/noticia1.jpg' %}" class="card-img-top" alt="Noticia 1">
-          <div class="card-body">
-            <h5 class="card-title">Nueva luminaria en la plaza</h5>
-            <p class="card-text">El municipio instaló nuevas luces LED en la plaza central para mayor seguridad.</p>
-            <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
+
+    <div class="row g-4 justify-content-center">
+      {% if noticias_recientes %}
+      {% for n in noticias_recientes %}
+      <div class="col-md-4 col-sm-6">
+        <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <h5 class="card-title text-info">{{ n.titulo }}</h5>
+              <p class="card-text small">{{ n.contenido|truncatewords:20 }}</p>
+            </div>
+            <a href="{% url 'detalle_noticia' n.id_noticia %}" class="btn btn-outline-primary btn-sm mt-2">
+              <i class="fa-solid fa-eye me-1"></i> Leer más
+            </a>
           </div>
         </div>
       </div>
+<<<<<<< HEAD
       <div class="col-md-4">
         <div class="card shadow-sm">
           <img src="{% static 'img/noticia2.jpg' %}" class="card-img-top" alt="Noticia 2">
@@ -107,7 +136,20 @@
             <a href="#" class="btn btn-outline-primary btn-sm">Leer más</a>
           </div>
         </div>
+=======
+      {% endfor %}
+      {% else %}
+      <div class="col-12 text-center">
+        <p class="text-muted">No hay noticias publicadas aún.</p>
+>>>>>>> Felipe_branchh
       </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-5 text-center">
+      <a href="{% url 'lista_noticias' %}" class="btn btn-outline-primary px-4">
+        <i class="fa-solid fa-list me-1"></i> Ver todas las noticias
+      </a>
     </div>
   </div>
 </section>

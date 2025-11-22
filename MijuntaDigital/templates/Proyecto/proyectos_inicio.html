@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Proyectos Vecinales{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container py-5">
+  <h2 class="text-center mb-5 text-primary fw-bold">
+    <i class="fa-solid fa-diagram-project me-2"></i>Proyectos Vecinales
+  </h2>
+
+  <div class="row justify-content-center g-4">
+
+    <!-- Mis Proyectos -->
+    <div class="col-md-5">
+      <div class="card shadow-sm h-100 text-center"
+        style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <i class="fa-solid fa-folder-user fa-3x text-info mb-3"></i>
+            <h5 class="card-title text-light">Mis Proyectos</h5>
+            <p class="card-text">
+              Consulta tus postulaciones, revisa su estado y gestiona tus proyectos vecinales.
+            </p>
+          </div>
+          <div>
+            <a href="{% url 'mis_proyectos' %}" class="btn btn-outline-info w-100 mb-2">
+              <i class="fa-solid fa-list me-1"></i> Ver Mis Proyectos
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Proyectos en Votación -->
+    <div class="col-md-5">
+      <div class="card shadow-sm h-100 text-center"
+        style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); transition: 0.3s;">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <i class="fa-solid fa-people-group fa-3x text-success mb-3"></i>
+            <h5 class="card-title text-light">Proyectos en Votación</h5>
+            <p class="card-text">
+              Participa en las decisiones de la comunidad votando por los proyectos propuestos por tus vecinos.
+            </p>
+          </div>
+          <div>
+            <!-- Corregido: antes usaba 'proyectos_todos' -->
+            <a href="{% url 'proyectos_votacion' %}" class="btn btn-outline-success w-100">
+              <i class="fa-solid fa-check-to-slot me-1"></i> Ver Proyectos en Votación
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);
+  }
+</style>
+{% endblock %}

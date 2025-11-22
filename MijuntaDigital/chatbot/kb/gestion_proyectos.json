@@ -1,0 +1,5 @@
+{
+  "module": "gestion_proyectos",
+  "title": "Gestión de Proyectos Vecinales",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Gestión de proyectos'.\n\nDescripción: muestra todos los proyectos enviados por los vecinos, incluyendo título, descripción y estado.\n\nAcciones: el directorio puede aprobar o rechazar cada proyecto. Los proyectos aprobados pueden mostrarse posteriormente como iniciativas vigentes dentro de la plataforma."
+}

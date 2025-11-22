@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Gestión de Solicitudes{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container py-5" style="border: 0cap;">
+  <h2 class="text-center text-primary fw-bold mb-4">
+    <i class="fa-solid fa-clipboard-check me-2"></i> Gestión de Solicitudes Ciudadanas
+  </h2>
+
+  <!-- Buscador -->
+  <form method="get" class="mb-4 d-flex justify-content-end">
+    <input type="hidden" name="estado" value="{{ estado_actual }}">
+    <input type="text" name="buscar" value="{{ query }}" class="form-control w-25 me-2" placeholder="Buscar...">
+    <button type="submit" class="btn btn-outline-primary">Buscar</button>
+  </form>
+
+  <!-- ==========================
+       TABS DE ESTADOS
+  ========================== -->
+  <ul class="nav nav-tabs mb-4 justify-content-center fw-bold">
+    <li class="nav-item">
+      <a class="nav-link {% if estado_actual == 'Pendiente' %}active{% endif %}"
+         href="?estado=Pendiente">
+        Pendientes
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link {% if estado_actual == 'Resuelta' %}active{% endif %}"
+         href="?estado=Resuelta">
+        Resueltas
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link {% if estado_actual == 'Rechazada' %}active{% endif %}"
+         href="?estado=Rechazada">
+        Rechazadas
+      </a>
+    </li>
+  </ul>
+
+
+  {% if solicitudes %}
+  <div class="table-responsive">
+    <table class="table table-dark table-striped align-middle text-center">
+      <thead class="table-secondary text-dark">
+        <tr>
+          <th>Vecino</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in solicitudes %}
+        <tr>
+          <td>{{ s.id_vecino.nombre }}</td>
+          <td>{{ s.tipo }}</td>
+          <td><span class="badge bg-{{ s.estado|lower }}">{{ s.estado }}</span></td>
+          <td>{{ s.fecha_creacion|date:"d/m/Y" }}</td>
+          <td>
+            <a href="{% url 'detalle_solicitud' s.id_solicitud %}" class="btn btn-sm btn-outline-info">
+              <i class="fa-solid fa-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-warning text-center mt-3">
+    No hay solicitudes registradas en este estado.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

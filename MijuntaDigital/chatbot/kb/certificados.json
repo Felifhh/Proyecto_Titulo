@@ -1,0 +1,5 @@
+{
+  "module": "certificados",
+  "title": "Certificados de residencia",
+  "content": "Acceso: desde la página principal en 'Trámites y servicios' → 'Certificado de residencia'.\n\nFlujo: el vecino completa la petición (puede incluir texto en la petición) y al enviar se genera una solicitud con estado 'Pendiente'. El costo es de $1500 y el pago se realiza vía WebPay. Una vez completada la transacción se envía una boleta al correo del solicitante y la solicitud queda en estado pendiente hasta su validación por el Directorio.\n\nResultado: si el pago y la validación se completan, el certificado queda disponible y válido por 30 días. No se puede solicitar un nuevo certificado mientras exista uno vigente."
+}

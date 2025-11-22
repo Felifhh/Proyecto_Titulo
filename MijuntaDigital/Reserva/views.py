@@ -12,9 +12,61 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 import requests
 from django.urls import reverse
 from transbank.webpay.webpay_plus.transaction import Transaction
+from Auditoria.utils import registrar_evento  #  Integración de auditoría
+
+
+def iniciar_pago_reserva(request, vecino_id, espacio_id, fecha_str, hora_inicio_str, hora_fin_str, total=None):
+    """Inicia una transacción WebPay para una reserva. Guarda datos en session['reserva_pago']
+    y devuelve el dict de respuesta de la transbank (contiene 'url' y 'token').
+
+    Este helper está pensado para ser llamado tanto desde la vista `reservar_desde_catalogo`
+    como desde otras partes (por ejemplo el chatbot). No crea la Reserva en la BD.
+    """
+    vecino = get_object_or_404(Vecino, pk=vecino_id)
+    espacio = get_object_or_404(EspacioComunal, pk=espacio_id, estado="Activo")
+
+    # calcular total si no viene
+    try:
+        if total is None:
+            hi = datetime.strptime(hora_inicio_str, "%H:%M").time()
+            hf = datetime.strptime(hora_fin_str, "%H:%M").time()
+            # estimar horas enteras (floor)
+            horas = (datetime.combine(datetime.today(), hf) - datetime.combine(datetime.today(), hi)).total_seconds() / 3600
+            horas = max(0, int(horas))
+            total = espacio.monto_hora * horas
+    except Exception:
+        # si falla el parseo, intentar usar cero para que la transacción almacene algo;
+        # quien llame debe validar que total sea correcto
+        total = total or 0
+
+    # Preparar transacción WebPay
+    buy_order = f"RSV-{vecino.id_vecino}-{int(timezone.now().timestamp())}"
+    session_id = request.session.session_key or str(vecino.id_vecino)
+    return_url = request.build_absolute_uri(reverse("retorno_pago_reserva"))
+
+    tx = Transaction()
+    tx.configure_for_testing()
+    response = tx.create(buy_order, session_id, total, return_url)
+
+    # Guardar en sesión para el retorno
+    request.session["reserva_pago"] = {
+        "vecino_id": vecino.id_vecino,
+        "espacio_id": espacio.id_espacio,
+        "fecha": str(fecha_str),
+        "hora_inicio": hora_inicio_str,
+        "hora_fin": hora_fin_str,
+        "total": total,
+        "buy_order": buy_order,
+        "session_id": session_id,
+        "payment_url": response.get("url"),
+        "payment_token": response.get("token"),
+    }
+    request.session.modified = True
+
+    return response
 
 def notificar_n8n(evento, datos):
-    webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
+    webhook_url = "https://felifhhhh.app.n8n.cloud/webhook/Correo-Mensaje"  # URL definitiva
     try:
         requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
         print(f" Evento '{evento}' enviado correctamente a n8n.")
@@ -22,14 +74,13 @@ def notificar_n8n(evento, datos):
         print(f" Error enviando evento a n8n: {e}")
 
 
+
+# ==============================================
+# GESTIÓN DE ESPACIOS (Directiva)
+# ==============================================
 @require_role(['presidente', 'secretario', 'tesorero'])
 def gestionar_espacios(request):
-    """
-    Panel de gestión de espacios comunales.
-    Incluye buscador por nombre y subida de imágenes.
-    """
     query = request.GET.get('buscar', '').strip()
-
     espacios_activos = EspacioComunal.objects.filter(estado="Activo")
     espacios_inactivos = EspacioComunal.objects.filter(estado="Inactivo")
 
@@ -43,24 +94,6 @@ def gestionar_espacios(request):
         "query": query,
     })
 
-
-@require_role(['presidente', 'secretario', 'tesorero'])
-def crear_espacio(request):
-    """Crea un nuevo espacio comunal con imagen obligatoria."""
-    if request.method == "POST":
-        form = EspacioForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Espacio comunal creado correctamente.")
-            return redirect('gestionar_espacios')
-        else:
-            messages.error(request, "Revisa los datos ingresados. Todos los campos son obligatorios.")
-    else:
-        form = EspacioForm()
-
-    return render(request, "Reserva/crear_espacio.html", {"form": form, "modo": "crear"})
-
-
 @require_role(['presidente', 'secretario', 'tesorero'])
 def cambiar_estado_espacio(request, id_espacio):
     """Activa o inactiva un espacio comunal."""
@@ -70,75 +103,83 @@ def cambiar_estado_espacio(request, id_espacio):
     messages.info(request, f"El estado de {espacio.nombre} ha sido cambiado a {espacio.estado}.")
     return redirect("gestionar_espacios")
 
+@require_role(['presidente', 'secretario', 'tesorero'])
+def crear_espacio(request):
+    """Crea un nuevo espacio comunal con imagen obligatoria."""
+    if request.method == "POST":
+        form = EspacioForm(request.POST, request.FILES)
+        if form.is_valid():
+            espacio = form.save()
+            registrar_evento(request, f"Creación de espacio comunal '{espacio.nombre}'", "Éxito")
+            messages.success(request, "Espacio comunal creado correctamente.")
+            return redirect('gestionar_espacios')
+        else:
+            registrar_evento(request, "Intento fallido de creación de espacio", "Error")
+            messages.error(request, "Revisa los datos ingresados.")
+    else:
+        form = EspacioForm()
+
+    return render(request, "Reserva/crear_espacio.html", {"form": form, "modo": "crear"})
+
 
 @require_role(['presidente', 'secretario', 'tesorero'])
-def eliminar_espacio(request, id_espacio):
-    """Elimina un espacio definitivamente."""
+def editar_espacio(request, id_espacio):
     espacio = get_object_or_404(EspacioComunal, pk=id_espacio)
-    espacio.delete()
-    messages.error(request, f"{espacio.nombre} ha sido eliminado permanentemente.")
-    return redirect("gestionar_espacios")
+    if request.method == 'POST':
+        form = EspacioForm(request.POST, request.FILES, instance=espacio)
+        if form.is_valid():
+            form.save()
+            registrar_evento(request, f"Modificación del espacio '{espacio.nombre}'", "Éxito")
+            messages.success(request, f"El espacio '{espacio.nombre}' fue actualizado correctamente.")
+            return redirect('gestionar_espacios')
+        else:
+            registrar_evento(request, f"Error al editar espacio '{espacio.nombre}'", "Error")
+            messages.error(request, "Error en el formulario.")
+    else:
+        form = EspacioForm(instance=espacio)
+    return render(request, 'Reserva/editar_espacio.html', {'form': form, 'modo': 'editar', 'espacio': espacio})
+
 
 @require_role(['presidente', 'secretario', 'tesorero'])
 def desactivar_espacio(request, id_espacio):
-    """Desactiva un espacio comunal (solo directiva)."""
     espacio = get_object_or_404(EspacioComunal, pk=id_espacio)
     espacio.estado = 'Inactivo'
     espacio.save()
+    registrar_evento(request, f"Desactivación del espacio '{espacio.nombre}'", "Éxito")
     messages.warning(request, f"El espacio '{espacio.nombre}' ha sido desactivado.")
     return redirect('gestionar_espacios')
 
 
 @require_role(['presidente', 'secretario', 'tesorero'])
 def activar_espacio(request, id_espacio):
-    """Activa un espacio comunal (solo directiva)."""
     espacio = get_object_or_404(EspacioComunal, pk=id_espacio)
     espacio.estado = 'Activo'
     espacio.save()
+    registrar_evento(request, f"Activación del espacio '{espacio.nombre}'", "Éxito")
     messages.success(request, f"El espacio '{espacio.nombre}' ha sido activado correctamente.")
     return redirect('gestionar_espacios')
 
+
 @require_role(['presidente', 'secretario', 'tesorero'])
-def editar_espacio(request, id_espacio):
-    """
-    Permite modificar un espacio comunal existente.
-    No se puede cambiar el estado desde aquí.
-    """
+def eliminar_espacio(request, id_espacio):
     espacio = get_object_or_404(EspacioComunal, pk=id_espacio)
+    nombre = espacio.nombre
+    espacio.delete()
+    registrar_evento(request, f"Eliminación definitiva del espacio '{nombre}'", "Éxito")
+    messages.error(request, f"{nombre} ha sido eliminado permanentemente.")
+    return redirect("gestionar_espacios")
 
-    if request.method == 'POST':
-        form = EspacioForm(request.POST, request.FILES, instance=espacio)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"El espacio '{espacio.nombre}' fue actualizado correctamente.")
-            return redirect('gestionar_espacios')
-        else:
-            messages.error(request, "Verifica los datos ingresados. Hay errores en el formulario.")
-    else:
-        form = EspacioForm(instance=espacio)
-
-    return render(request, 'Reserva/editar_espacio.html', {
-        'form': form,
-        'modo': 'editar',
-        'espacio': espacio
-    })
-
-
+# ==============================================
+# RESERVAS DE VECINOS
+# ==============================================
 def mis_reservas(request):
-    """
-    Muestra todas las reservas realizadas por el vecino autenticado.
-    """
     if not request.session.get("vecino_id"):
         messages.error(request, "Debes iniciar sesión para ver tus reservas.")
         return redirect("home")
 
     vecino = get_object_or_404(Vecino, pk=request.session["vecino_id"])
     reservas = Reserva.objects.filter(id_vecino=vecino).order_by('-fecha_creacion')
-
-    return render(request, "Reserva/mis_reservas.html", {
-        "reservas": reservas,
-        "vecino": vecino
-    })
+    return render(request, "Reserva/mis_reservas.html", {"reservas": reservas, "vecino": vecino})
 
 
 
@@ -164,60 +205,13 @@ def reservar_desde_catalogo(request, id_espacio):
         form = ReservaForm(request.POST)
         if form.is_valid():
             reserva_temp = form.save(commit=False)
-            hora_inicio = reserva_temp.hora_inicio
-            hora_fin = reserva_temp.hora_fin
-
-            # Rango permitido 08:00–20:00
-            if hora_inicio.hour < 8 or hora_fin.hour > 20:
-                messages.error(request, "Las reservas deben estar entre las 08:00 y las 20:00.")
-                return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
-
-            # Conflictos (solapamiento)
-            conflicto = Reserva.objects.filter(
-                id_espacio=espacio,
-                fecha=reserva_temp.fecha,
-                hora_inicio__lt=hora_fin,
-                hora_fin__gt=hora_inicio,
-                estado__in=["Activa"]
-            ).exists()
-            if conflicto:
-                messages.error(request, "El espacio ya está reservado en ese horario.")
-                return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
-
-            # Validar horas y calcular costo
-            horas = hora_fin.hour - hora_inicio.hour
-            if horas <= 0:
-                messages.error(request, "La hora de término debe ser mayor a la de inicio.")
-                return render(request, "Reserva/reservar_desde_catalogo.html", {"form": form, "espacio": espacio})
-
-            total = espacio.monto_hora * horas
-
-            # 💳 Generar transacción Webpay (no guardar reserva todavía)
-            buy_order = f"RSV-{vecino.id_vecino}-{int(timezone.now().timestamp())}"
-            session_id = request.session.session_key or str(vecino.id_vecino)
-            return_url = request.build_absolute_uri(reverse("retorno_pago_reserva"))
-
-            tx = Transaction()
-            tx.configure_for_testing()
-            response = tx.create(buy_order, session_id, total, return_url)
-
-            # Guardamos datos temporales en sesión para crear la reserva solo si el pago es exitoso
-            request.session["reserva_pago"] = {
-                "vecino_id": vecino.id_vecino,
-                "espacio_id": espacio.id_espacio,
-                "fecha": str(reserva_temp.fecha),
-                "hora_inicio": hora_inicio.strftime("%H:%M"),
-                "hora_fin": hora_fin.strftime("%H:%M"),
-                "total": total,
-            }
-
-            # Redirigir al formulario Webpay
-            return render(request, "pagos/iniciar_pago.html", {
-                "url": response["url"],
-                "token": response["token"],
-            })
-
+            reserva_temp = form.save(commit=False)
+            # usar el helper para iniciar pago
+            registrar_evento(request, f"Reserva solicitada para '{espacio.nombre}' el {reserva_temp.fecha}", "Pendiente de pago")
+            response = iniciar_pago_reserva(request, vecino.id_vecino, espacio.id_espacio, str(reserva_temp.fecha), reserva_temp.hora_inicio.strftime("%H:%M"), reserva_temp.hora_fin.strftime("%H:%M"))
+            return render(request, "pagos/iniciar_pago.html", {"url": response["url"], "token": response["token"]})
         else:
+            registrar_evento(request, f"Error en intento de reserva para '{espacio.nombre}'", "Formulario inválido")
             messages.error(request, "Hay errores en el formulario.")
     else:
         form = ReservaForm(initial={"id_espacio": espacio})
@@ -229,8 +223,8 @@ def reservar_desde_catalogo(request, id_espacio):
 
 
 
-
 def ver_disponibilidad(request, id_espacio):
+
     """
     Muestra los bloques horarios de un espacio comunal en una fecha.
     """

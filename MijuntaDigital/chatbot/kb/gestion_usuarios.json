@@ -1,0 +1,5 @@
+{
+  "module": "gestion_usuarios",
+  "title": "Gestión de Usuarios",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Gestión de Usuarios'.\n\nDescripción: tabla con todos los vecinos registrados clasificados como Activos, Desactivados o Rechazados.\n\nFunciones: se puede actualizar el rol de un vecino (por ejemplo, asignar cargos de directiva), desactivar cuentas, o reactivar usuarios desactivados. No se permiten registros manuales desde este módulo."
+}

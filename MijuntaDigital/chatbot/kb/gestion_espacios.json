@@ -1,0 +1,5 @@
+{
+  "module": "gestion_espacios",
+  "title": "Gestión de Espacios",
+  "content": "Acceso: menú de directiva → 'Gestión' → 'Gestión de espacios'.\n\nDescripción: muestra todos los espacios comunitarios con estado 'Activo' o 'Desactivado'. Se permite editar nombre, monto por hora, descripción e imagen.\n\nFunciones: crear nuevos espacios mediante un formulario; desactivar espacios para evitar reservas; editar o eliminar espacios existentes."
+}

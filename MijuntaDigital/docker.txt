@@ -1,0 +1,3 @@
+docker build -t mijunta-digital .
+docker tag mijunta-digital felifhh/mijunta-digital:latest
+docker push felifhh/mijunta-digital:latest

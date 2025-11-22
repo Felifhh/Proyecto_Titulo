@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Detalle del Documento{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container py-5" style="border: 0cap;">
+    
+    <h2 class="text-primary fw-bold mb-4">
+        <i class="fa-solid fa-file-lines me-2"></i>{{ documento.titulo }}
+    </h2>
+
+    <p><strong>Tipo:</strong> {{ documento.tipo }}</p>
+    <p><strong>Versión:</strong> {{ documento.version }}</p>
+    <p><strong>Fecha subida:</strong> {{ documento.fecha_subida|date:"d/m/Y H:i" }}</p>
+    <hr>
+
+    {% if es_imagen %}
+    <div class="text-center mb-4">
+        <img src="{{ documento.archivo.url }}" alt="Vista previa" class="img-fluid rounded shadow-sm"
+            style="max-height: 400px;">
+    </div>
+    {% endif %}
+
+    <h5 class="text-info mt-3">Texto reconocido (OCR):</h5>
+    {% if documento.texto_extraido %}
+    <pre class="bg-dark text-light p-3 border rounded"
+        style="white-space: pre-wrap;">{{ documento.texto_extraido }}</pre>
+    {% else %}
+    <p class="text-muted">No se extrajo texto o el OCR no fue posible.</p>
+    {% endif %}
+
+    <a href="{{ documento.archivo.url }}" class="btn btn-outline-primary mt-3" download>
+        <i class="fa-solid fa-download me-1"></i> Descargar Documento
+    </a>
+    <a href="{% url 'lista_documentos' %}" class="btn btn-secondary mt-3 ms-2">
+        <i class="fa-solid fa-arrow-left me-1"></i> Volver
+    </a>
+</div>
+{% endblock %}

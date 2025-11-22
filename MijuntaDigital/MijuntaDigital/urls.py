@@ -3,7 +3,8 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
-from Actividades.views import home
+from Actividades.views import home as home
+
 
 
 urlpatterns = [
@@ -17,6 +18,12 @@ urlpatterns = [
     path("reservas/", include("Reserva.urls")),
     path("actividades/", include("Actividades.urls")),
     path("pagos/", include("pagos.urls")),
+    path('notificaciones/', include('Notificaciones.urls')),
+    path('noticias/', include('Noticia.urls')),
+    path("solicitudes/", include("Solicitudes.urls")),
+    path("documentos/", include("Documentos.urls")),
+    path("auditoria/", include("Auditoria.urls")),
+    path('chatbot/', include('chatbot.urls')),
 ]
 
 if settings.DEBUG:

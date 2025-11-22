@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Crear Proyecto Vecinal{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container mt-4" style="border: 0cap;">
+  <h2 class="text-light mb-4"><i class="fa-solid fa-file-signature me-2 text-success"></i> Postular Nuevo Proyecto</h2>
+
+  <form method="post" enctype="multipart/form-data"
+  class="bg-dark text-light p-4 rounded shadow-sm border border-secondary needs-validation"
+  novalidate>
+  {% csrf_token %}
+
+  <!-- TÍTULO -->
+  <div class="mb-3">
+    <label for="titulo" class="form-label text-info fw-semibold">Título del Proyecto</label>
+    <input type="text" name="titulo" id="titulo"
+      class="form-control bg-dark text-light border-secondary"
+      minlength="5" maxlength="100" required>
+    <div class="invalid-feedback">
+      El título es obligatorio y debe tener al menos 5 caracteres.
+    </div>
+  </div>
+
+  <!-- DESCRIPCIÓN -->
+  <div class="mb-3">
+    <label for="descripcion" class="form-label text-info fw-semibold">Descripción</label>
+    <textarea name="descripcion" id="descripcion" rows="4"
+      class="form-control bg-dark text-light border-secondary"
+      minlength="10" required
+      placeholder="Describe el objetivo del proyecto..."></textarea>
+    <div class="invalid-feedback">
+      La descripción es obligatoria y debe tener al menos 10 caracteres.
+    </div>
+  </div>
+
+  <!-- PRESUPUESTO -->
+  <div class="mb-3">
+    <label for="presupuesto" class="form-label text-info fw-semibold">Presupuesto estimado (CLP)</label>
+    <input type="number" name="presupuesto" id="presupuesto"
+      class="form-control bg-dark text-light border-secondary"
+      min="0" step="1000" required>
+    <div class="invalid-feedback">
+      Debes indicar un presupuesto válido mayor o igual a 0.
+    </div>
+  </div>
+
+  <!-- DOCUMENTO ADJUNTO -->
+  <div class="mb-3">
+    <label for="documento_adj" class="form-label text-info fw-semibold">
+      Documento de respaldo (PDF o imagen)
+    </label>
+    <input type="file" name="documento_adj" id="documento_adj"
+      class="form-control bg-dark text-light border-secondary"
+      accept=".pdf,.png,.jpg,.jpeg" required>
+    <div class="invalid-feedback">
+      Debes subir un archivo válido (PDF, JPG, PNG).
+    </div>
+  </div>
+
+  <div class="text-end mt-4">
+    <button type="submit" class="btn btn-success px-4">
+      <i class="fa-solid fa-paper-plane me-1"></i> Enviar Proyecto
+    </button>
+    <a href="{% url 'mis_proyectos' %}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+  </div>
+</form>
+<br>
+
+</div>
+<script>
+  (function () {
+    'use strict'
+
+    const forms = document.querySelectorAll('.needs-validation')
+
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+
+        const archivo = document.getElementById("documento_adj")
+        const valido = ["application/pdf", "image/png", "image/jpeg"]
+
+        if (archivo.files.length > 0 && !valido.includes(archivo.files[0].type)) {
+          archivo.classList.add("is-invalid")
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+</script>
+
+{% endblock %}

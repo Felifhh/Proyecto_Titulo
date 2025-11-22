@@ -17,7 +17,14 @@
         <p class="text-muted">Tu pago ha sido procesado exitosamente. La solicitud ha sido enviada al directorio.</p>
       {% else %}
         <h2 class="text-danger mb-3">Pago Rechazado</h2>
+<<<<<<< HEAD
         <p class="text-muted">El pago no pudo ser autorizado. Intenta nuevamente o regresa al inicio.</p>
+=======
+        <p class="text-muted">El pago no pudo ser autorizado. Regresa al inicio e intenta nuevamente.</p>
+        <a href="{% url 'home' %}" class="btn btn-outline-danger mt-3">
+          <i class="fa-solid fa-rotate-left me-1"></i> Volver al inicio
+        </a>
+>>>>>>> Felipe_branchh
       {% endif %}
 
       <hr>
@@ -38,9 +45,14 @@
         <a href="{% url 'mis_certificados' %}" class="btn btn-primary mt-3">
           <i class="fa-solid fa-folder-open me-1"></i> Ver mis certificados
         </a>
+<<<<<<< HEAD
       {% else %}
         <a href="{% url 'home' %}" class="btn btn-outline-danger mt-3">
           <i class="fa-solid fa-rotate-left me-1"></i> Volver al inicio
+=======
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+          <i class="fa-solid fa-house me-1"></i> Volver al inicio
+>>>>>>> Felipe_branchh
         </a>
       {% endif %}
 
@@ -68,3 +80,7 @@
 </body>
 </html>
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> Felipe_branchh

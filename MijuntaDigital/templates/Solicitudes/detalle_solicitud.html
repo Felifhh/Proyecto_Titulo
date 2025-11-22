@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Detalle de Solicitud{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+<div class="container py-5">
+  <h2 class="text-primary mb-4">
+    <i class="fa-solid fa-file-lines me-2"></i> Detalle de Solicitud #{{ solicitud.id_solicitud }}
+  </h2>
+
+  <div class="card bg-dark text-light p-4 border-secondary shadow-sm">
+    <p><strong>Tipo:</strong> {{ solicitud.tipo }}</p>
+    <p><strong>Descripción:</strong> {{ solicitud.descripcion }}</p>
+    <p><strong>Estado:</strong> {{ solicitud.estado }}</p>
+    <p><strong>Fecha de creación:</strong> {{ solicitud.fecha_creacion|date:"d/m/Y H:i" }}</p>
+  </div>
+
+  {% if request.session.vecino_rol|lower in 'presidente,secretario,tesorero' %}
+  <form method="post" action="{% url 'actualizar_estado_solicitud' solicitud.id_solicitud %}" class="mt-4">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between align-items-center">
+      <select name="estado" class="form-select w-50 bg-dark text-light border-secondary">
+        <option value="En Proceso">En Proceso</option>
+        <option value="Resuelta">Resuelta</option>
+        <option value="Rechazada">Rechazada</option>
+      </select>
+      <button type="submit" class="btn btn-success">
+        <i class="fa-solid fa-floppy-disk me-1"></i> Actualizar Estado
+      </button>
+    </div>
+  </form>
+  {% endif %}
+
+  <div class="mt-4 text-end">
+    <a href="javascript:history.back()" class="btn btn-outline-light">
+      <i class="fa-solid fa-arrow-left me-1"></i> Volver
+    </a>
+  </div>
+</div>
+{% endblock %}

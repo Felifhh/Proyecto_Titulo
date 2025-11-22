@@ -5,6 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth.hashers import check_password
+from Auditoria.utils import registrar_evento  #  NUEVA IMPORTACIÓN
 
 # Formularios y Modelos
 from .forms import RegistroVecinoForm, LoginForm, FotoPerfilForm
@@ -12,13 +13,25 @@ from .models import Vecino, Rol
 from Certificados.models import Certificado
 from Solicitudes.models import Solicitud
 from Reserva.models import Reserva
-
-# Decorador personalizado (rol)
+from pagos.models import Transaccion
 from Usuarios.decorators import require_role
 import requests
+<<<<<<< HEAD
 
 def notificar_n8n(evento, datos):
     webhook_url = "https://felifhh.app.n8n.cloud/webhook/evento-app"  # URL definitiva
+=======
+from django.db.models import Sum
+
+from django.utils.crypto import get_random_string
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from datetime import timedelta
+
+
+def notificar_n8n(evento, datos):
+    webhook_url = "https://felifhhh.app.n8n.cloud/webhook/9a0798f9-34e0-4e76-b7c8-874c7f636a7a"  # URL definitiva
+>>>>>>> Felipe_branchh
     try:
         requests.post(webhook_url, json={"evento": evento, **datos}, timeout=5)
         print(f" Evento '{evento}' enviado correctamente a n8n.")
@@ -31,24 +44,50 @@ def notificar_n8n(evento, datos):
 # ==============================================
 # REGISTRO DE NUEVO VECINO
 # ==============================================
-
 @require_http_methods(["GET", "POST"])
 def registro_vecino(request):
     """
     Permite que un vecino se registre en el sistema.
+<<<<<<< HEAD
     El registro queda en estado "Pendiente" hasta ser aprobado por el Presidente.
     Muestra mensajes de validación personalizados según los validadores.
+=======
+    El registro queda en estado "Pendiente" hasta ser aprobado por la Directiva.
+>>>>>>> Felipe_branchh
     """
     if request.method == "POST":
         form = RegistroVecinoForm(request.POST, request.FILES)
+
         if form.is_valid():
+<<<<<<< HEAD
             form.save()
             messages.success(
                 request,
                 "Registro enviado correctamente. Queda pendiente de validación por la directiva."
             )
+=======
+            vecino = form.save(commit=False)
+
+            # ASIGNAR ROL "Vecino" EXISTENTE EN BD
+            from Usuarios.models import Rol
+            try:
+                rol_vecino = Rol.objects.filter(nombre__iexact="vecino").first()
+                if not rol_vecino:
+                    rol_vecino = Rol.objects.create(nombre="vecino")
+            except Rol.DoesNotExist:
+                # Si no existe lo creamos UNA SOLA VEZ
+                rol_vecino = Rol.objects.create(nombre="vecino")
+
+            vecino.id_rol = rol_vecino
+            vecino.save()
+
+            registrar_evento(request, "Registro de nuevo vecino", "Éxito")
+            messages.success(request, "Registro enviado correctamente. Queda pendiente de validación por la directiva.")
+>>>>>>> Felipe_branchh
             return redirect('usuarios_registro_ok')
+
         else:
+<<<<<<< HEAD
             # 🧠 Si hay errores específicos, mostrar cada uno
             for field, errors in form.errors.items():
                 for error in errors:
@@ -56,13 +95,20 @@ def registro_vecino(request):
             # Si no hay errores concretos (caso raro), mensaje genérico
             if not form.errors:
                 messages.error(request, "Verifica los datos ingresados. Hay errores en el formulario.")
+=======
+            registrar_evento(request, "Intento de registro fallido", "Error en validación")
+            for _, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
+
+>>>>>>> Felipe_branchh
     else:
         form = RegistroVecinoForm()
 
     return render(request, "Usuarios/registro.html", {"form": form})
 
 
-# AGREGA ESTA FUNCIÓN (probablemente la borraste sin querer)
+
 def registro_ok(request):
     """Página de confirmación luego del registro."""
     return render(request, "Usuarios/registro_ok.html")
@@ -112,25 +158,31 @@ def detalle_vecino(request, pk):
     return render(request, "Usuarios/detalle_vecino.html", {"vecino": vecino})
 
 
-# --- ACCIONES: APROBAR / RECHAZAR ---
+# ==============================================
+# APROBACIÓN / RECHAZO DE VECINOS
+# ==============================================
 @require_role('presidente')
 @require_POST
 def aprobar_vecino(request, pk):
-    """
-    Cambia el estado de un vecino pendiente a 'Activo'.
-    Solo el Presidente puede aprobar.
-    """
     vecino = get_object_or_404(Vecino, pk=pk)
     vecino.estado = "Activo"
     vecino.save()
 
+<<<<<<< HEAD
     #  Notificar a n8n
+=======
+    registrar_evento(request, f"Aprobación de vecino {vecino.nombre}", "Éxito")
+
+>>>>>>> Felipe_branchh
     notificar_n8n("cuenta_aprobada", {
         "nombre": vecino.nombre,
         "correo": vecino.correo,
         "run": vecino.run
     })
+<<<<<<< HEAD
 
+=======
+>>>>>>> Felipe_branchh
     messages.success(request, f"{vecino.nombre} ha sido aprobado correctamente.")
     return redirect("usuarios_pendientes")
 
@@ -138,29 +190,33 @@ def aprobar_vecino(request, pk):
 @require_role('presidente')
 @require_POST
 def rechazar_vecino(request, pk):
-    """
-    Cambia el estado de un vecino pendiente a 'Rechazado'.
-    Solo el Presidente puede realizar esta acción.
-    """
     vecino = get_object_or_404(Vecino, pk=pk)
     vecino.estado = "Rechazado"
     vecino.save()
 
+<<<<<<< HEAD
     #  Notificar a n8n
+=======
+    registrar_evento(request, f"Rechazo de vecino {vecino.nombre}", "Éxito")
+
+>>>>>>> Felipe_branchh
     notificar_n8n("cuenta_rechazada", {
         "nombre": vecino.nombre,
         "correo": vecino.correo,
         "run": vecino.run
     })
+<<<<<<< HEAD
 
+=======
+>>>>>>> Felipe_branchh
     messages.warning(request, f"{vecino.nombre} ha sido rechazado.")
     return redirect("usuarios_pendientes")
 
 
-# ==============================================
-# AUTENTICACIÓN (LOGIN / LOGOUT)
-# ==============================================
 
+# ==============================================
+# LOGIN / LOGOUT
+# ==============================================
 def login_view(request):
     """
     Inicia sesión verificando RUN y contraseña del vecino activo.
@@ -178,10 +234,12 @@ def login_view(request):
                 request.session["vecino_nombre"] = vecino.nombre
                 request.session["vecino_rol"] = (vecino.id_rol.nombre or '').strip().lower()
 
+                registrar_evento(request, f"Inicio de sesión de {vecino.nombre}", "Éxito")
                 messages.success(request, f"Bienvenido {vecino.nombre}")
             else:
                 messages.error(request, "Contraseña incorrecta.")
         except Vecino.DoesNotExist:
+            registrar_evento(request, f"Intento de login con RUN inexistente ({run})", "RUN no encontrado")
             messages.error(request, "RUN no encontrado o no activo.")
 
         return redirect("home")
@@ -192,6 +250,7 @@ def logout_view(request):
     """
     Cierra sesión y elimina todos los datos guardados en request.session.
     """
+    registrar_evento(request, "Cierre de sesión", "Éxito")
     request.session.flush()
     messages.success(request, "Has cerrado sesión correctamente.")
     return redirect("home")
@@ -226,49 +285,62 @@ def perfil_vecino(request, id_vecino):
     certificados = Certificado.objects.filter(id_vecino=perfil).order_by("-fecha_emision")[:5]
     solicitudes = Solicitud.objects.filter(id_vecino=perfil).order_by("-fecha_creacion")[:5]
     reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
+<<<<<<< HEAD
+
+=======
+>>>>>>> Felipe_branchh
 
 
-    # -----------------------------
-    # CAMBIO DE ROL (solo Presidente)
-    # -----------------------------
+# ==============================================
+# CAMBIO DE ROL
+# ==============================================
+def perfil_vecino(request, id_vecino):
+    """
+    Permite visualizar y modificar el perfil de un vecino.
+    Incluye auditoría de cambios de rol o foto.
+    """
+    vecino_id = request.session.get("vecino_id")
+    if not vecino_id:
+        messages.error(request, "Debes iniciar sesión para acceder al perfil.")
+        return redirect("home")
+
+    usuario_sesion = get_object_or_404(Vecino, pk=vecino_id)
+    perfil = get_object_or_404(Vecino, pk=id_vecino)
+
+    if usuario_sesion.id_vecino != perfil.id_vecino and usuario_sesion.id_rol.nombre not in ["Presidente", "Secretario", "Tesorero"]:
+        messages.error(request, "No tienes permisos para ver este perfil.")
+        return redirect("home")
+
+    certificados = Certificado.objects.filter(id_vecino=perfil).order_by("-fecha_emision")[:5]
+    solicitudes = Solicitud.objects.filter(id_vecino=perfil).order_by("-fecha_creacion")[:5]
+    reservas = Reserva.objects.filter(id_vecino=perfil).order_by("-fecha")[:5]
+
+    # --- TOTAL RECAUDADO (solo transacciones Authorized) ---
+    total_recaudado = Transaccion.objects.filter(
+        estado="Authorized"
+    ).aggregate(total=Sum('monto'))['total'] or 0
+
+    # --- CAMBIO DE ROL (solo presidente) ---
     if request.method == "POST" and "rol_id" in request.POST and usuario_sesion.id_rol.nombre == "Presidente":
         nuevo_rol_id = request.POST.get("rol_id")
         nuevo_rol = Rol.objects.get(pk=nuevo_rol_id)
-
-        # Si el nuevo rol es Presidente → transferir el cargo
-        if nuevo_rol.nombre == "Presidente":
-            anterior_presidente = Vecino.objects.filter(id_rol__nombre="Presidente").first()
-            if anterior_presidente:
-                anterior_presidente.id_rol = Rol.objects.get(nombre="Vecino")
-                anterior_presidente.save()
-
-            usuario_sesion.id_rol = Rol.objects.get(nombre="Vecino")
-            usuario_sesion.save()
-            perfil.id_rol = nuevo_rol
-            perfil.save()
-
-            messages.success(request, f"Has delegado la presidencia a {perfil.nombre}.")
-            return redirect("usuarios_logout")
-
-        # Para cualquier otro cambio
         perfil.id_rol = nuevo_rol
         perfil.save()
+        registrar_evento(request, f"Cambio de rol de {perfil.nombre} a {nuevo_rol.nombre}", "Éxito")
         messages.success(request, f"El rol de {perfil.nombre} ha sido actualizado a {nuevo_rol.nombre}.")
         return redirect("perfil_vecino", id_vecino=perfil.id_vecino)
 
-    # -----------------------------
-    # ACTUALIZACIÓN DE FOTO
-    # -----------------------------
+    # --- ACTUALIZACIÓN DE FOTO ---
     if request.method == "POST" and "foto" in request.FILES:
         form_foto = FotoPerfilForm(request.POST, request.FILES, instance=perfil)
         if form_foto.is_valid():
             form_foto.save()
+            registrar_evento(request, f"Actualización de foto de perfil de {perfil.nombre}", "Éxito")
             messages.success(request, "Foto de perfil actualizada correctamente.")
             return redirect("perfil_vecino", id_vecino=perfil.id_vecino)
     else:
         form_foto = FotoPerfilForm(instance=perfil)
 
-    # Render del perfil
     roles = Rol.objects.all()
     return render(request, "Usuarios/perfil_vecino.html", {
         "perfil": perfil,
@@ -278,6 +350,9 @@ def perfil_vecino(request, id_vecino):
         "solicitudes": solicitudes,
         "reservas": reservas,
         "form_foto": form_foto,
+
+        # ⬇ NUEVA VARIABLE AGREGADA ⬇
+        "total_recaudado": total_recaudado,
     })
 
 
@@ -285,11 +360,10 @@ def perfil_vecino(request, id_vecino):
 
 
 # ==============================================
-# GESTIÓN DE USUARIOS (solo PRESIDENTE)
+# GESTIÓN DE USUARIOS
 # ==============================================
 from django.db.models import Q
-
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def gestion_usuarios(request):
     """
     Panel administrativo del Presidente.
@@ -331,29 +405,33 @@ def gestion_usuarios(request):
     })
 
 
-@require_role('presidente')
+# ==============================================
+# ACTIVAR / DESACTIVAR USUARIOS
+# ==============================================
+@require_role(['presidente', 'secretario', 'tesorero'])
 def desactivar_vecino(request, id_vecino):
-    """Desactiva a un vecino (solo visible desde la gestión de usuarios)."""
     vecino = get_object_or_404(Vecino, pk=id_vecino)
     vecino.estado = "Desactivado"
     vecino.save()
+
+    registrar_evento(request, f"Desactivación de vecino {vecino.nombre}", "Éxito")
     messages.info(request, f"{vecino.nombre} ha sido desactivado.")
     return redirect("gestion_usuarios")
 
 
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def activar_vecino(request, id_vecino):
-    """Activa un vecino previamente desactivado."""
     vecino = get_object_or_404(Vecino, pk=id_vecino)
     vecino.estado = "Activo"
     vecino.save()
+
+    registrar_evento(request, f"Reactivación de vecino {vecino.nombre}", "Éxito")
     messages.success(request, f"{vecino.nombre} ha sido activado nuevamente.")
     return redirect("gestion_usuarios")
 
-
-@require_role('presidente')
+@require_role(['presidente', 'secretario', 'tesorero'])
 def cambiar_rol(request, id_vecino):
-    """Actualiza el rol de un vecino (solo Presidente)."""
+    """Actualiza el rol de un vecino."""
     if request.method == "POST":
         nuevo_rol_id = request.POST.get("rol_id")
         vecino = get_object_or_404(Vecino, pk=id_vecino)
@@ -361,3 +439,225 @@ def cambiar_rol(request, id_vecino):
         vecino.save()
         messages.success(request, f"Rol de {vecino.nombre} actualizado correctamente.")
     return redirect("gestion_usuarios")
+
+
+# ==============================================
+# RECUPERACIÓN DE CONTRASEÑA 
+# ==============================================
+
+# Diccionario temporal para almacenar los códigos de verificación
+codigos_reset = {}
+
+
+def solicitar_recuperacion(request):
+    if request.method == "POST":
+        correo = request.POST.get("correo")
+        try:
+            vecino = Vecino.objects.get(correo=correo, estado="Activo")
+
+            # Generar código temporal de 6 dígitos
+            codigo = get_random_string(length=6, allowed_chars="0123456789")
+
+            # Guardar en diccionario y sesión
+            codigos_reset[correo] = {
+                "codigo": codigo,
+                "expira": timezone.now() + timedelta(minutes=5)
+            }
+            request.session["correo_reset"] = correo  # Guarda el correo para el siguiente paso
+
+            # Enviar por n8n
+            notificar_n8n("recuperacion_codigo", {
+                "nombre": vecino.nombre,
+                "correo": vecino.correo,
+                "codigo": codigo
+            })
+
+            messages.success(request, "Se ha enviado un código de verificación a tu correo electrónico.")
+            return redirect("verificar_codigo")
+
+        except Vecino.DoesNotExist:
+            messages.error(request, "No existe una cuenta activa con ese correo.")
+    
+    return render(request, "Usuarios/recuperar_contrasena.html")
+
+
+
+def verificar_codigo(request):
+    correo = request.session.get("correo_reset")
+
+    if not correo:
+        messages.error(request, "No hay una solicitud activa de recuperación.")
+        return redirect("solicitar_recuperacion")
+
+    if request.method == "POST":
+        codigo_ingresado = request.POST.get("codigo")
+
+        datos_guardados = codigos_reset.get(correo)
+        if not datos_guardados:
+            messages.error(request, "No hay una solicitud activa para este correo.")
+            return redirect("solicitar_recuperacion")
+
+        # Validar código y tiempo de expiración
+        if timezone.now() > datos_guardados["expira"]:
+            del codigos_reset[correo]
+            request.session.pop("correo_reset", None)
+            messages.error(request, "El código ha expirado. Solicita uno nuevo.")
+            return redirect("solicitar_recuperacion")
+
+        if codigo_ingresado != datos_guardados["codigo"]:
+            messages.error(request, "Código incorrecto.")
+            return render(request, "Usuarios/verificar_codigo.html", {"correo": correo})
+
+        # Si es correcto, pasar al cambio de contraseña
+        messages.success(request, "Código verificado correctamente. Ahora puedes cambiar tu contraseña.")
+        return redirect("cambiar_contrasena")
+
+    return render(request, "Usuarios/verificar_codigo.html", {"correo": correo})
+
+
+
+def cambiar_contrasena(request):
+    """
+    Paso 3: Permite establecer una nueva contraseña (no igual a la anterior).
+    """
+    correo = request.session.get("correo_reset")
+    if not correo:
+        messages.error(request, "No hay una solicitud de recuperación activa.")
+        return redirect("solicitar_recuperacion")
+
+    if request.method == "POST":
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        if nueva != confirmar:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "Usuarios/cambiar_contrasena.html")
+
+        try:
+            vecino = Vecino.objects.get(correo=correo)
+        except Vecino.DoesNotExist:
+            messages.error(request, "Usuario no encontrado.")
+            return redirect("solicitar_recuperacion")
+
+        # Validar que no sea igual a la anterior
+        if check_password(nueva, vecino.contrasena):
+            messages.error(request, "La nueva contraseña no puede ser igual a la anterior.")
+            return render(request, "Usuarios/cambiar_contrasena.html")
+
+        # Actualizar contraseña
+        vecino.contrasena = make_password(nueva)
+        vecino.save()
+
+        # Notificar por n8n
+        notificar_n8n("contrasena_actualizada", {
+            "nombre": vecino.nombre,
+            "correo": vecino.correo,
+            "fecha": timezone.localtime().strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+        registrar_evento(request, f"Recuperación de contraseña exitosa para {vecino.nombre}", "Éxito")
+
+        # Limpiar sesión y código
+        request.session.pop("correo_reset", None)
+        codigos_reset.pop(correo, None)
+
+        messages.success(request, "Tu contraseña fue actualizada correctamente.")
+        return redirect("home")
+
+    return render(request, "Usuarios/cambiar_contrasena.html")
+
+def editar_perfil(request, id_vecino):
+    vecino = get_object_or_404(Vecino, pk=id_vecino)
+
+    # Seguridad
+    if request.session.get("vecino_id") != vecino.id_vecino:
+        messages.error(request, "No puedes editar el perfil de otro vecino.")
+        return redirect("home")
+
+    if request.method == "POST":
+        vecino.nombre = request.POST.get("nombre")
+        vecino.direccion = request.POST.get("direccion")
+        vecino.save()
+
+        registrar_evento(request, f"Modificó sus datos personales", "Éxito")
+        messages.success(request, "Información personal actualizada correctamente.")
+        return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+
+from django.db.models import Q
+
+def editar_contacto(request, id_vecino):
+    vecino = get_object_or_404(Vecino, pk=id_vecino)
+
+    # Seguridad
+    if request.session.get("vecino_id") != vecino.id_vecino:
+        messages.error(request, "No puedes editar los datos de contacto de otro vecino.")
+        return redirect("home")
+
+    if request.method == "POST":
+
+        nuevo_correo = request.POST.get("correo").strip().lower()
+        nuevo_telefono = request.POST.get("telefono")
+        nueva_direccion = request.POST.get("direccion")
+
+        # === VALIDACIÓN: CORREO YA REGISTRADO EN OTRO USUARIO ===
+        if Vecino.objects.filter(
+            Q(correo__iexact=nuevo_correo),
+            ~Q(id_vecino=vecino.id_vecino)  # excluir a sí mismo
+        ).exists():
+            messages.error(request, "El correo ingresado ya está registrado por otro vecino.")
+            return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        # === VALIDACIÓN: TELÉFONO DUPLICADO (si tu campo es único) ===
+        if nuevo_telefono:
+            if Vecino.objects.filter(
+                Q(telefono=nuevo_telefono),
+                ~Q(id_vecino=vecino.id_vecino)
+            ).exists():
+                messages.error(request, "El teléfono ingresado ya está en uso por otro vecino.")
+                return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        # === SI TODO ESTÁ OK, GUARDAR ===
+        vecino.correo = nuevo_correo
+        vecino.telefono = nuevo_telefono
+        vecino.direccion = nueva_direccion
+        vecino.save()
+
+        registrar_evento(request, "Actualización de datos de contacto", "Éxito")
+        messages.success(request, "Datos de contacto actualizados correctamente.")
+        return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+
+
+def cambiar_contrasena_perfil(request, id_vecino):
+    vecino = get_object_or_404(Vecino, pk=id_vecino)
+
+    if request.session.get("vecino_id") != vecino.id_vecino:
+        messages.error(request, "No puedes cambiar la contraseña de otro usuario.")
+        return redirect("home")
+
+    if request.method == "POST":
+        actual = request.POST.get("actual")
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        if not check_password(actual, vecino.contrasena):
+            messages.error(request, "La contraseña actual no es correcta.")
+            return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        if nueva != confirmar:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return redirect("perfil_vecino", id_vecino=vecino.id_vecino)
+
+        vecino.contrasena = make_password(nueva)
+        vecino.save()
+
+        registrar_evento(request, "Cambio de contraseña desde perfil", "Éxito")
+
+        notificar_n8n("contrasena_actualizada", {
+            "nombre": vecino.nombre,
+            "correo": vecino.correo
+        })
+
+        messages.success(request, "Contraseña actualizada correctamente.")
+        return redirect("perfil_vecino", id_vecino=vecino.id_vecino)

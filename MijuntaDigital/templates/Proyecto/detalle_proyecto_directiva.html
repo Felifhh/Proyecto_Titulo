@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Detalle del Proyecto{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container py-5" style="border: 0cap;">
+    <div class="card shadow-lg p-4"
+        style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 12px;">
+
+        <h3 class="text-primary fw-bold mb-4">
+            <i class="fa-solid fa-folder-open me-2"></i>Detalle del Proyecto
+        </h3>
+
+        <div class="mb-3">
+            <h4 class="text-light">{{ proyecto.titulo }}</h4>
+            <p class=" mb-0"><i class="fa-solid fa-user me-2 text-info"></i>Vecino: {{ proyecto.id_vecino.nombre }}</p>
+            <p class=" mb-0"><i class="fa-solid fa-envelope me-2 text-info"></i>{{ proyecto.id_vecino.correo }}</p>
+            <p class=" mb-0"><i class="fa-solid fa-calendar me-2 text-info"></i>{{proyecto.fecha_postulacion|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        <hr class="border-secondary">
+
+        <div class="mb-3">
+            <h5 class="text-info"><i class="fa-solid fa-file-alt me-2"></i>Descripción</h5>
+            <p class="text-light">{{ proyecto.descripcion|default:"Sin descripción." }}</p>
+        </div>
+
+        <div class="mb-3">
+            <h5 class="text-warning"><i class="fa-solid fa-sack-dollar me-2"></i>Presupuesto</h5>
+            <p class="text-light">${{ proyecto.presupuesto|floatformat:0 }}</p>
+        </div>
+
+        {% if proyecto.documento_adj %}
+        <div class="mb-3">
+            <h5 class="text-success"><i class="fa-solid fa-paperclip me-2"></i>Documento Adjunto</h5>
+            <a href="{{ proyecto.documento_adj.url }}" target="_blank" class="btn btn-outline-success btn-sm">
+                <i class="fa-solid fa-download me-1"></i> Descargar Documento
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <h5 class="text-info"><i class="fa-solid fa-circle-info me-2"></i>Estado actual</h5>
+            <span class="badge 
+        {% if proyecto.estado == 'En Revisión' %} bg-warning text-dark
+        {% elif proyecto.estado == 'Aprobado' %} bg-success
+        {% elif proyecto.estado == 'Rechazado' %} bg-danger
+        {% elif proyecto.estado == 'En Votación' %} bg-info text-dark
+        {% else %} bg-secondary {% endif %}">
+                {{ proyecto.estado }}
+            </span>
+        </div>
+
+        <hr class="border-secondary mb-4">
+
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'gestionar_proyectos' %}" class="btn btn-outline-light">
+                <i class="fa-solid fa-arrow-left me-1"></i> Volver
+            </a>
+
+            {% if proyecto.estado == 'En Revisión' %}
+            <div class="d-flex justify-content-end">
+                <form action="{% url 'actualizar_estado_proyecto' proyecto.id_proyecto 'aprobar' %}" method="post"
+                    class="me-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-check me-1"></i> Aprobar
+                    </button>
+                </form>
+
+                <form action="{% url 'actualizar_estado_proyecto' proyecto.id_proyecto 'rechazar' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa-solid fa-xmark me-1"></i> Rechazar
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

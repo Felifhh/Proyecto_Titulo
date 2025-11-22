@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Documentos{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-4 d-flex justify-content-center" style="border: 0cap;">
+  <div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm text-center position-relative"
+      role="alert">
+      <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+      <!-- Barra de progreso -->
+      <div class="alert-progress"></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="{% static 'js/mensaje.js' %}"></script>
+{% endif %}
+
+<div class="container py-5">
+  <h2 class="text-center text-primary fw-bold mb-4">
+    <i class="fa-solid fa-file-lines me-2"></i> Documentos
+  </h2>
+<form method="get" class="d-flex mb-3">
+    <input type="text"
+           name="buscar"
+           value="{{ query }}"
+           class="form-control me-2"
+           placeholder="Buscar por título o contenido del documento...">
+    <button class="btn btn-primary">Buscar</button>
+</form>
+
+
+  <div class="text-end mb-4">
+    <a href="{% url 'subir_documento' %}" class="btn btn-success">
+      <i class="fa-solid fa-upload me-1"></i> Subir Documento
+    </a>
+  </div>
+
+  {% if documentos %}
+  <div class="row g-4">
+    {% for d in documentos %}
+    <div class="col-md-6">
+      <div class="card bg-dark text-light border-secondary shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="text-info">{{ d.titulo }}</h5>
+          <p><strong>Tipo:</strong> {{ d.tipo }}</p>
+          <p class="small"><i class="fa-regular fa-calendar"></i> {{ d.fecha_subida|date:"d/m/Y H:i" }}</p>
+          <a href="{% url 'detalle_documento' d.id_documento %}" class="btn btn-outline-primary btn-sm mt-2">
+            <i class="fa-solid fa-eye me-1"></i> Ver Detalle
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-warning text-center">No hay documentos registrados.</div>
+  {% endif %}
+</div>
+{% endblock %}

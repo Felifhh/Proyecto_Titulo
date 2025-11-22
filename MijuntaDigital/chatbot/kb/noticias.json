@@ -1,0 +1,5 @@
+{
+  "module": "noticias",
+  "title": "Noticias Vecinales",
+  "content": "Acceso: desde el menú desplegable del vecino → 'Noticias Vecinales'.\n\nDescripción: muestra una lista de noticias desde la más nueva a la más antigua; cada noticia incluye título, fecha de publicación y detalle. Si el vecino pregunta por noticias recientes, la IA debe ser capaz de buscar y listar los títulos de noticias en la base de datos ordenados por fecha de publicación."
+}

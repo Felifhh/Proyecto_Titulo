@@ -1,21 +1,22 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from Usuarios.models import Vecino
 
 
 class Documento(models.Model):
+
     id_documento = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=10, blank=True, null=True)
-    ruta_archivo = models.CharField(max_length=255, blank=True, null=True)
-    version = models.IntegerField(blank=True, null=True)
-    fecha_subida = models.DateTimeField(blank=True, null=True)
+    tipo = models.CharField(max_length=200, default="Documento", null=True, blank=True)
+    archivo = models.FileField(upload_to='documentos/', null=True, blank=True)
+    texto_extraido = models.TextField(blank=True, null=True)
+    version = models.IntegerField(default=1)
+    fecha_subida = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    id_vecino = models.ForeignKey(Vecino, on_delete=models.CASCADE, db_column='id_vecino', null=True, blank=True)
 
     class Meta:
-        managed = False
         db_table = 'documento'
+
+    def __str__(self):
+        return f"{self.titulo} (v{self.version})"
+
+

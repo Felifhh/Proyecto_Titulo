@@ -7,8 +7,10 @@
   <title>Inicio - Mi Junta Digital</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="{% static 'css/estilo_global.css' %}">
+  <!-- Bootstrap primero -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Tu CSS global DESPUÉS (con cache-busting) -->
+  <link rel="stylesheet" href="{% static 'css/estilo_global.css' %}?v=3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   {% block extra_head %}{% endblock %}
@@ -46,12 +48,19 @@
                   <i class="fa-solid fa-user me-2 text-primary"></i>Mi perfil
                 </a>
               </li>
+<<<<<<< HEAD
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+
+=======
+>>>>>>> Felipe_branchh
               <li>
                 <hr class="dropdown-divider border-secondary">
               </li>
 
               <li>
-                <a class="dropdown-item text-light" href="{% url 'proyectos_todos' %}">
+                <a class="dropdown-item text-light" href="{% url 'proyectos_inicio' %}">
                   <i class="fa-solid fa-lightbulb me-2 text-primary"></i>Proyectos Vecinales
                 </a>
               </li>
@@ -74,7 +83,11 @@
 
               <li>
                 <a class="dropdown-item text-light" href="{% url 'mis_reservas' %}">
+<<<<<<< HEAD
                   <i class="fa-solid fa-list-ul me-1 text-info"></i> Mis Reservas
+=======
+                  <i class="fa-solid fa-building me-1"></i> Mis Reservas
+>>>>>>> Felipe_branchh
                 </a>
               </li>
 
@@ -87,6 +100,37 @@
                 </a>
               </li>
 
+<<<<<<< HEAD
+=======
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'lista_noticias' %}">
+                  <i class="fa-regular fa-newspaper me-2 text-warning"></i> Noticias Vecinales
+                </a>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'mis_solicitudes' %}">
+                  <i class="fa-solid fa-envelope-open-text me-2 text-info"></i> Mis Solicitudes
+                </a>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              <li>
+                <a class="dropdown-item text-light" href="{% url 'lista_documentos' %}">
+                  <i class="fa-solid fa-file-lines me-2 text-warning"></i> Documentos
+                </a>
+              </li>
+
+
+>>>>>>> Felipe_branchh
               {% endif %}
 
               <li>
@@ -120,6 +164,45 @@
             </a>
           </li>
           {% endif %}
+          {% if notificaciones %}
+          <div class="dropdown">
+            <a class="nav-link text-light position-relative" href="#" id="notificacionesDropdown" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-bell fa-lg"></i>
+
+              {% if notificaciones_no_leidas %}
+              <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                {{ notificaciones_no_leidas|length }}
+              </span>
+              {% endif %}
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end bg-dark text-light shadow-lg border-secondary"
+              aria-labelledby="notificacionesDropdown" style="min-width: 280px; border-radius: 10px;">
+              {% for n in notificaciones %}
+              <li>
+                <a href="#"
+                  class="dropdown-item text-light py-2 marcar-leida {% if n in notificaciones_no_leidas %}fw-bold{% else %}text-muted{% endif %}"
+                  data-id="{{ n.id_notificacion }}">
+                  <i
+                    class="fa-regular fa-circle me-2 {% if n in notificaciones_no_leidas %}text-info{% else %}text-secondary{% endif %}"></i>
+                  {{ n.titulo }}
+                </a>
+              </li>
+              {% if not forloop.last %}
+              <li>
+                <hr class="dropdown-divider border-secondary">
+              </li>
+              {% endif %}
+              {% empty %}
+              <li><span class="dropdown-item text-muted text-center py-2">Sin notificaciones</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+
+
 
 
         </ul>
@@ -142,8 +225,30 @@
     <small>Desarrollado para capstone</small>
   </footer>
 
+  <!-- BURBUJA Y CHATBOT -->
+  <div id="chatbot-bubble" class="chatbot-bubble" onclick="toggleChatbot()">
+    💬
+  </div>
+
+  <div id="chatbot-window" class="chatbot-window">
+    <div class="chatbot-header">
+      <h6>Asistente Virtual - Mi Junta Digital</h6>
+      <button onclick="toggleChatbot()" class="chatbot-close">&times;</button>
+    </div>
+    <div id="chatbot-messages" class="chatbot-messages">
+      <div class="bot-message">👋 ¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?</div>
+    </div>
+    <button onclick="limpiarConversacion()">Limpiar Chat</button>
+    <div class="chatbot-input">
+      <input type="text" id="user-input" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter') sendMessage()">
+      <button onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'js/leido.js' %}"></script>
+  <script src="{% static 'js/asistente.js' %}"></script>
   {% block extra_scripts %}{% endblock %}
 
   <!-- MODAL LOGIN -->
@@ -172,6 +277,10 @@
             <button type="submit" class="btn btn-primary">Entrar</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           </div>
+          <div class="modal-footer" style="border: 0cap;">
+          <a href="{% url 'solicitar_recuperacion' %}">No recuerdo mi contraseña</a>
+          </div>
+          
         </form>
       </div>
     </div>
