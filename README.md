@@ -114,41 +114,33 @@ El desarrollo se estructuró en 8 Sprints iterativos e incrementales:
 
 ### Opción 1: Mediante Docker Desktop (Recomendado)
 
-bash
 # 1. Clonar el repositorio
 git clone [https://github.com/Felifhh/Proyecto_Titulo.git](https://github.com/Felifhh/Proyecto_Titulo.git)
 cd Proyecto_Titulo
 
 # 2. Levantar los contenedores
 docker-compose up --build
-Opción 2: Ejecución Manual con Entorno Virtual
+
+## Opción 2: Ejecución Manual con Entorno Virtual
+
 Clonar e ingresar al repositorio:
+* git clone [https://github.com/Felifhh/Proyecto_Titulo.git](https://github.com/Felifhh/Proyecto_Titulo.git)
+* cd Proyecto_Titulo
 
-Bash
-git clone [https://github.com/Felifhh/Proyecto_Titulo.git](https://github.com/Felifhh/Proyecto_Titulo.git)
-cd Proyecto_Titulo
+
 Crear y activar el entorno virtual:
-
-Bash
-# En Windows:
-python -m venv venv
-venv\Scripts\activate
-
-# En Linux / macOS:
-source venv/bin/activate
-Instalar dependencias:
-
-Bash
-pip install -r requirements.txt
+* python -m venv venv
+* venv\Scripts\activate
+* pip install -r requirements.txt
 Configurar variables de entorno en archivo .env (credenciales de Supabase, Gemini y Webpay).
 
 Ejecutar migraciones e iniciar el servidor:
+* python manage.py migrate
+* python manage.py createsuperuser
+* python manage.py runserver
 
-Bash
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-Autor
+
+# Autor
 Felipe Fuentes
 
 Ingeniero en Informática — Duoc UC
