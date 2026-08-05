@@ -61,23 +61,96 @@ El proyecto opera bajo un esquema desacoplado y moderno enfocado en la nube y la
 ▼             ▼              ▼                  ▼                 ▼
 [Supabase/PostgreSQL]  [Webpay]  [n8n Workflow]  [Google Gemini]  [Cloud Vision OCR]
  (BD y Storage)        (Pagos)    (Correos/PDF)   (Chatbot IA)      (Lectura Doc)
-Stack TecnológicoCapaTecnología / HerramientaFrontendHTML5, CSS3, JavaScriptBackendPython, Django FrameworkBase de Datos & StoragePostgreSQL, SupabaseDevOps & EntornoDocker Desktop, Git, GitHubAutomatización & IAn8n (Orquestación), Google Gemini API, Google Cloud Vision (OCR)Pasarela de PagosWebpay (Transbank)Metodología de Desarrollo (SCRUM)El desarrollo se estructuró en 8 Sprints iterativos e incrementales:Sprint 0: Levantamiento de requerimientos, diagramas de arquitectura, casos de uso, mockups y diseño de modelo de datos.Sprint 1 (Módulo de Usuarios): Registro, inicio de sesión, roles (Vecino/Directiva), perfiles y validación de solicitudes.Sprint 2 (Certificados y Pagos): Flujo de aprobación, integración con Webpay, generación de QR/folio único y automatizaciones con n8n.Sprint 3 (Espacios Comunitarios): CRUD de espacios comunitarios, módulo de reservas e inscripción a actividades.Sprint 4 (Proyectos y Noticias): Publicación de proyectos vecinales, votaciones en línea y portal de noticias.Sprint 5 (Solicitudes y Auditoría): Tablero de gestión de solicitudes ciudadanas para la directiva y sistema de bitácora/auditoría.Sprint 6 (Inteligencia Artificial): Chatbot conversacional con Gemini API, módulo OCR para lectura de documentos y reportes semanales con n8n.Sprint 7 (Cierre & Despliegue): Pruebas de integración, dockerización del sistema, manuales de usuario y documentación final.Desafíos Técnicos y Soluciones1. Migración de Base de DatosDesafío: MariaDB presentó inconsistencias en migraciones complejas, conflictos de claves foráneas y límites en entornos cloud.Solución: Se realizó una migración hacia PostgreSQL en Supabase, logrando mayor estabilidad, mejor integración nativa con Django y un entorno cloud escalable.2. Contenerización con DockerDesafío: Configuración inicial de red y persistencia de datos entre contenedores en entornos locales y de despliegue.Solución: Se construyeron imágenes livianas y un docker-compose estructurado para garantizar la replicabilidad del entorno de desarrollo.3. Seguridad y Gestión de CredencialesDesafío: Exposición de claves API de servicios de IA y pasarelas externas.Solución: Implementación de consultas de credenciales cifradas mediante almacenamiento seguro en Supabase y orquestación con n8n, evitando hardcodeo de tokens en el repositorio.4. Orquestación de Flujos Asíncronos con n8nDesafío: Coordinación de eventos del backend para disparar la creación de reportes ejecutivos en PDF y envío de notificaciones automáticas.Solución: Diseño de flujos basados en Webhooks integrados a Django que procesan datos, generan vistas HTML y consolidan archivos PDF adjuntos vía correo electrónico.Instalación y Ejecución LocalOpción 1: Mediante Docker Desktop (Recomendado)Bash# 1. Clonar el repositorio
+```
+## Stack Tecnológico
+
+| Capa | Tecnología / Herramienta |
+| :--- | :--- |
+| **Frontend** | HTML5, CSS3, JavaScript |
+| **Backend** | Python, Django Framework |
+| **Base de Datos & Storage** | PostgreSQL, Supabase |
+| **DevOps & Entorno** | Docker Desktop, Git, GitHub |
+| **Automatización & IA** | n8n (Orquestación), Google Gemini API, Google Cloud Vision (OCR) |
+| **Pasarela de Pagos** | Webpay (Transbank) |
+
+---
+
+## Metodología de Desarrollo (SCRUM)
+
+El desarrollo se estructuró en 8 Sprints iterativos e incrementales:
+
+* **Sprint 0:** Levantamiento de requerimientos, diagramas de arquitectura, casos de uso, mockups y diseño de modelo de datos.
+* **Sprint 1 (Módulo de Usuarios):** Registro, inicio de sesión, roles (Vecino/Directiva), perfiles y validación de solicitudes.
+* **Sprint 2 (Certificados y Pagos):** Flujo de aprobación, integración con Webpay, generación de QR/folio único y automatizaciones con n8n.
+* **Sprint 3 (Espacios Comunitarios):** CRUD de espacios comunitarios, módulo de reservas e inscripción a actividades.
+* **Sprint 4 (Proyectos y Noticias):** Publicación de proyectos vecinales, votaciones en línea y portal de noticias.
+* **Sprint 5 (Solicitudes y Auditoría):** Tablero de gestión de solicitudes ciudadanas para la directiva y sistema de bitácora/auditoría.
+* **Sprint 6 (Inteligencia Artificial):** Chatbot conversacional con Gemini API, módulo OCR para lectura de documentos y reportes semanales con n8n.
+* **Sprint 7 (Cierre & Despliegue):** Pruebas de integración, dockerización del sistema, manuales de usuario y documentación final.
+
+---
+
+## Desafíos Técnicos y Soluciones
+
+### 1. Migración de Base de Datos
+* **Desafío:** MariaDB presentó inconsistencias en migraciones complejas, conflictos de claves foráneas y límites en entornos cloud.
+* **Solución:** Se realizó una migración hacia **PostgreSQL en Supabase**, logrando mayor estabilidad, mejor integración nativa con Django y un entorno cloud escalable.
+
+### 2. Contenerización con Docker
+* **Desafío:** Configuración inicial de red y persistencia de datos entre contenedores en entornos locales y de despliegue.
+* **Solución:** Se construyeron imágenes livianas y un archivo `docker-compose` estructurado para garantizar la replicabilidad del entorno de desarrollo.
+
+### 3. Seguridad y Gestión de Credenciales
+* **Desafío:** Exposición de claves API de servicios de IA y pasarelas externas.
+* **Solución:** Implementación de consultas de credenciales cifradas mediante almacenamiento seguro en Supabase y orquestación con n8n, evitando el hardcodeo de tokens en el repositorio.
+
+### 4. Orquestación de Flujos Asíncronos con n8n
+* **Desafío:** Coordinación de eventos del backend para disparar la creación de reportes ejecutivos en PDF y envío de notificaciones automáticas.
+* **Solución:** Diseño de flujos basados en Webhooks integrados a Django que procesan datos, generan vistas HTML y consolidan archivos PDF adjuntos vía correo electrónico.
+
+---
+
+## Instalación y Ejecución Local
+
+### Opción 1: Mediante Docker Desktop (Recomendado)
+
+bash
+# 1. Clonar el repositorio
 git clone [https://github.com/Felifhh/Proyecto_Titulo.git](https://github.com/Felifhh/Proyecto_Titulo.git)
 cd Proyecto_Titulo
 
 # 2. Levantar los contenedores
 docker-compose up --build
-Opción 2: Ejecución Manual con Entorno VirtualClonar e ingresar al repositorio:Bashgit clone [https://github.com/Felifhh/Proyecto_Titulo.git](https://github.com/Felifhh/Proyecto_Titulo.git)
+Opción 2: Ejecución Manual con Entorno Virtual
+Clonar e ingresar al repositorio:
+
+Bash
+git clone [https://github.com/Felifhh/Proyecto_Titulo.git](https://github.com/Felifhh/Proyecto_Titulo.git)
 cd Proyecto_Titulo
-Crear y activar el entorno virtual:Bash# En Windows:
+Crear y activar el entorno virtual:
+
+Bash
+# En Windows:
 python -m venv venv
 venv\Scripts\activate
 
 # En Linux / macOS:
-python3 -m venv venv
 source venv/bin/activate
-Instalar dependencias:Bashpip install -r requirements.txt
-Configurar variables de entorno en archivo .env (credenciales de Supabase, Gemini y Webpay).Ejecutar migraciones e iniciar servidor:Bashpython manage.py migrate
+Instalar dependencias:
+
+Bash
+pip install -r requirements.txt
+Configurar variables de entorno en archivo .env (credenciales de Supabase, Gemini y Webpay).
+
+Ejecutar migraciones e iniciar el servidor:
+
+Bash
+python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
-AutorFelipe FuentesIngeniero en Informática — Duoc UCPerfil de GitHub: https://github.com/Felifhh
+Autor
+Felipe Fuentes
+
+Ingeniero en Informática — Duoc UC
+
+Perfil de GitHub: https://github.com/Felifhh
